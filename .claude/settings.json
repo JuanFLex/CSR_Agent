@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/p_infinex/code/CSR_Agent/.claude/hooks/guard_sql_server.py",
+            "timeout": 10,
+            "statusMessage": "Checking the command cannot write to SQL Server"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+current:
+  region: Americas
+  source_type: osor
+  status: active
+  source_file: CSR_OSOR_AMERICAS
+  source_modified_at: 2026-09-07 15:38:31
+  activated_at: 2026-09-07 15:40:00
+  row_count: 6
+
+previous:
+  region: Americas
+  source_type: osor
+  status: superseded
+  source_file: previous_osor
+  source_modified_at: 2026-09-06 15:38:31
+  activated_at: 2026-09-06 15:40:00
+  row_count: 1
+
+europe:
+  region: Europe
+  source_type: osor
+  status: active
+  source_file: CSR_OSOR_EUROPE
+  source_modified_at: 2026-09-07 16:00:00
+  activated_at: 2026-09-07 16:01:00
+  row_count: 1

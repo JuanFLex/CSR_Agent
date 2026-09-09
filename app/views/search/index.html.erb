@@ -1,0 +1,25 @@
+<div class="panel">
+  <h1>CSR Supply Visibility <span class="region"><%= @search.region %></span></h1>
+
+  <%= form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "search" do |f| %>
+    <%= f.select :search_type,
+                 Csr::SearchRequest.options_for_select,
+                 { selected: @search.search_type }, class: "type" %>
+    <%= f.text_field :value, value: @search.value, placeholder: "CPN, MPN, CPO-Line, SO o FPN…",
+                     autofocus: true, autocomplete: "off" %>
+    <%= f.submit "Buscar", class: "go" %>
+  <% end %>
+</div>
+
+<%= turbo_frame_tag "results" do %>
+  <% if @search.blank? %>
+    <p class="hint">Busca por CPN, MPN, CPO+Línea, SO o FPN. Un CPN con varios MPN devuelve una fila por combinación.</p>
+  <% elsif @search.snapshot.nil? %>
+    <p class="warn">Todavía no hay un snapshot de OSOR activo. Corre el ingest antes de buscar.</p>
+  <% elsif @summary[:combos_found].zero? %>
+    <p class="warn">Sin resultados para <strong><%= @search.label %></strong> = <code><%= @search.value %></code>.</p>
+  <% else %>
+    <%= render "summary", summary: @summary, keys: @keys, context: @context, snapshot: @search.snapshot %>
+    <%= render "lines", lines: @lines, summary: @summary %>
+  <% end %>
+<% end %>

@@ -1,0 +1,110 @@
+on_time:
+  snapshot: current
+  part_key: primary
+  cpn: CPN-100
+  mpn: MPN-A
+  fpn: FCS-CPN-100
+  bp_name: Customer A
+  ship_address: SHIP-A
+  so_whs: GDL
+  cpo: PO100
+  cpo_pos: "10"
+  so: SO100
+  so_pos: "1"
+  baan_ordered: 10.25
+  pdd: 2026-09-10 08:00:00
+  cdd: 2026-09-09 08:00:00
+  miss: false
+
+missed:
+  snapshot: current
+  part_key: primary
+  cpn: CPN-100
+  mpn: MPN-A
+  fpn: FCS-MPN-A
+  bp_name: Customer B
+  ship_address: SHIP-B
+  so_whs: MTY
+  cpo: PO100
+  cpo_pos: "20-1"
+  so: SO101
+  so_pos: "2"
+  baan_ordered: 5.75
+  pdd: 2026-09-11 08:00:00
+  cdd: 2026-09-12 08:00:00
+  miss: true
+
+unconfirmed:
+  snapshot: current
+  part_key: alternate
+  cpn: CPN-100
+  mpn: MPN-B
+  fpn: FCS-CPN-100
+  cpo: PO100
+  cpo_pos: "30"
+  so: SO100
+  so_pos: "3"
+  pdd: 2026-09-10 08:00:00
+  miss: false
+
+same_day_miss:
+  snapshot: current
+  part_key: alternate
+  cpn: CPN-100
+  mpn: MPN-B
+  fpn: FCS-MPN-B
+  cpo: PO200
+  cpo_pos: "10"
+  so: SO102
+  so_pos: "4"
+  baan_ordered: 3.5
+  pdd: 2026-09-10 08:00:00
+  cdd: 2026-09-10 13:00:00
+  miss: true
+
+unkeyed:
+  snapshot: current
+  cpn: CPN-100
+  fpn: FCS-CPN-100
+  cpo: PO100
+  cpo_pos: "40"
+  so: SO100
+  baan_ordered: 100
+  cdd: 2026-12-01 08:00:00
+  miss: true
+
+other:
+  snapshot: current
+  part_key: other
+  cpn: CPN-200
+  mpn: MPN-C
+  fpn: FCS-OTHER
+  cpo: OTHER
+  so: OTHER
+  baan_ordered: 1000
+  cdd: 2026-12-02 08:00:00
+  miss: true
+
+previous:
+  snapshot: previous
+  part_key: primary
+  cpn: CPN-100
+  mpn: MPN-A
+  fpn: FCS-OLD
+  cpo: POOLD
+  so: SOOLD
+  baan_ordered: 9999
+  cdd: 2026-01-01 08:00:00
+  miss: false
+
+europe:
+  snapshot: europe
+  part_key: europe
+  cpn: CPN-100
+  mpn: MPN-A
+  fpn: FCS-CPN-100
+  cpo: PO100
+  so: SO100
+  baan_ordered: 2000
+  cdd: 2026-12-03 08:00:00
+  miss: true

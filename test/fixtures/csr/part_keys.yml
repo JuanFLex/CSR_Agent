@@ -1,0 +1,29 @@
+primary:
+  key_value: CPN-100|MPN-A
+  cpn: CPN-100
+  mpn: MPN-A
+  region: Americas
+
+alternate:
+  key_value: CPN-100|MPN-B
+  cpn: CPN-100
+  mpn: MPN-B
+  region: Americas
+
+other:
+  key_value: CPN-200|MPN-C
+  cpn: CPN-200
+  mpn: MPN-C
+  region: Americas
+
+without_lines:
+  key_value: CPN-300|MPN-D
+  cpn: CPN-300
+  mpn: MPN-D
+  region: Americas
+
+europe:
+  key_value: CPN-100|MPN-A
+  cpn: CPN-100
+  mpn: MPN-A
+  region: Europe

@@ -1,0 +1,61 @@
+<%# locals: (summary:, keys:, context:, snapshot:) %>
+<%# SUMMARY!B4:B9 plus the combo count from E6. %>
+<section class="cards">
+  <div class="card <%= summary[:misses].positive? ? "red" : "green" %>">
+    <span class="label">Riesgo de ejecución</span>
+    <span class="value"><%= summary[:misses].positive? ? "RED" : "GREEN" %></span>
+    <span class="note">
+      <%= summary[:misses].positive? ? "#{summary[:misses]} línea(s) con CDD > PDD" : "ninguna línea atrasada" %>
+    </span>
+  </div>
+
+  <div class="card">
+    <span class="label">Combinaciones</span>
+    <span class="value"><%= summary[:combos_found] %></span>
+    <span class="note">llaves CPN|MPN</span>
+  </div>
+
+  <div class="card">
+    <span class="label">Líneas abiertas</span>
+    <span class="value"><%= number_with_delimiter summary[:open_lines] %></span>
+    <span class="note"><%= number_with_delimiter summary[:open_qty].to_i %> pzs</span>
+  </div>
+
+  <div class="card">
+    <span class="label">Rango ETD</span>
+    <span class="value small">
+      <%= summary[:etd_min]&.to_date || "—" %> → <%= summary[:etd_max]&.to_date || "—" %>
+    </span>
+    <span class="note">CDD mínimo y máximo</span>
+  </div>
+</section>
+
+<p class="freshness">
+  Fuente <code><%= snapshot.source_file %></code>
+  · actualizada <%= snapshot.fresh_as_of&.strftime("%Y-%m-%d %H:%M") || "—" %>
+  · snapshot #<%= snapshot.id %>
+</p>
+
+<%# A key can span several FPNs, customers, ship-tos or plants. The Excel had to
+    pick one; here they are all listed, and a key spanning more than one is
+    marked, because that is precisely where the workbook misreports. %>
+<table class="keys">
+  <thead><tr><th>Key</th><th>CPN</th><th>MPN</th><th>FPN</th><th>Cliente</th><th>Planta</th></tr></thead>
+  <tbody>
+    <% keys.each do |key| %>
+      <% ctx = context[key.id] || {} %>
+      <tr>
+        <td><code><%= key.key_value %></code></td>
+        <td><%= key.cpn %></td>
+        <td><%= key.mpn %></td>
+        <% [ :fpn, :customer, :site ].each do |dimension| %>
+          <% values = Array(ctx[dimension]) %>
+          <td class="<%= "multi" if values.many? %>">
+            <%= values.presence&.join(" · ") || "—" %>
+            <% if values.many? %><span class="badge"><%= values.size %></span><% end %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

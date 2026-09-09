@@ -1,0 +1,25 @@
+<%# locals: (lines:, summary:) %>
+<h2>Líneas abiertas <span class="count">(<%= lines.size %><%= " de #{summary[:open_lines]}" if lines.size < summary[:open_lines] %>)</span></h2>
+
+<table class="lines">
+  <thead>
+    <tr>
+      <th>CPO</th><th>SO</th><th>PO</th><th>Cant.</th>
+      <th>PDD</th><th>CDD</th><th>Estatus</th><th>Fechas</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% lines.each do |line| %>
+      <tr class="<%= "miss" if line.miss %>">
+        <td><%= line.cpo %><%= "-#{line.cpo_pos}" if line.cpo_pos %></td>
+        <td><%= line.so %><%= "-#{line.so_pos}" if line.so_pos %></td>
+        <td><%= line.po %></td>
+        <td class="num"><%= number_with_delimiter line.baan_ordered.to_i %></td>
+        <td><%= line.pdd&.to_date %></td>
+        <td><%= line.cdd&.to_date || "—" %></td>
+        <td><%= line.so_status %></td>
+        <td><%= line.dates_condition %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

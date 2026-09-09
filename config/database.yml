@@ -1,0 +1,127 @@
+# Two engines, and the split is the whole point.
+#
+#   primary    PostgreSQL. The app's own tables — users, snapshots, part keys,
+#              order lines — plus the Solid Cache/Queue/Cable databases. Fully
+#              read/write: migrations, seeds and normal development happen here,
+#              and `db:reset` can never reach anything the app does not own.
+#
+#   reporting  SQL Server, where the DBA's CSR_OSOR_AMERICAS lives. Read-only,
+#              always. `database_tasks: false` keeps `db:migrate` and friends
+#              from ever pointing schema changes at it, and Reporting::Base
+#              refuses writes on top of that.
+#
+# That separation is why the app owns no SQL Server object at all: the only
+# connection that reaches the DBA's server is one Rails' schema tasks cannot see.
+#
+# Development and test authenticate through the local Unix socket as the current
+# OS user, so no credentials are needed. Production reads them from the
+# environment, so they never land in git:
+#
+#   CSR_APP_DB_HOST       PostgreSQL host                    (default: localhost)
+#   CSR_APP_DB_PORT       PostgreSQL port                    (default: 5432)
+#   CSR_APP_DB_NAME       base name; the Solid databases append _cache/_queue/_cable
+#   CSR_APP_DB_USER       login for the app's own databases
+#   CSR_APP_DB_PASSWORD
+#
+#   CSR_DB_HOST           SQL Server host or host\instance   (default: localhost)
+#   CSR_DB_PORT           TDS port                           (default: 1433)
+#   CSR_DB_NAME           database holding CSR_OSOR_AMERICAS
+#   CSR_READONLY_USER     login for the reporting connection — use a db_datareader
+#   CSR_READONLY_PASSWORD
+#
+#   CSR_REPORTING_SQLITE  optional: path to a local stand-in for the staging
+#                         table, so development never needs the real server
+default: &default
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+postgres: &postgres
+  <<: *default
+  adapter: postgresql
+  encoding: unicode
+
+# Production credentials for the four app-owned databases. Kept in one place so
+# a rotated password is one edit rather than four.
+app_production: &app_production
+  <<: *postgres
+  host:     <%= ENV.fetch("CSR_APP_DB_HOST", "localhost") %>
+  port:     <%= ENV.fetch("CSR_APP_DB_PORT", 5432) %>
+  username: <%= ENV["CSR_APP_DB_USER"] %>
+  password: <%= ENV["CSR_APP_DB_PASSWORD"] %>
+
+# SQLite is left in for one job only: the local stand-in for the staging table
+# in development and test. Nothing in production uses it.
+sqlite: &sqlite
+  <<: *default
+  adapter: sqlite3
+  timeout: 5000
+
+# The DBA's server. Nothing here is ever written to.
+reporting: &reporting
+  <<: *default
+  adapter: sqlserver
+  host: <%= ENV.fetch("CSR_DB_HOST", "localhost") %>
+  port: <%= ENV.fetch("CSR_DB_PORT", 1433) %>
+  database: <%= ENV.fetch("CSR_DB_NAME", "CSR_Reporting") %>
+  username: <%= ENV["CSR_READONLY_USER"] %>
+  password: <%= ENV["CSR_READONLY_PASSWORD"] %>
+  login_timeout: 10
+  timeout: 5000
+  database_tasks: false
+
+development:
+  primary:
+    <<: *postgres
+    database: csr_agent_development
+  reporting:
+<% if ENV["CSR_REPORTING_SQLITE"] %>
+    # Local harness: a stand-in staging table in SQLite, reached through this
+    # same connection, so the ingest follows the real code path to SQL Server
+    # rather than a shortcut around it.
+    <<: *sqlite
+    database: <%= ENV["CSR_REPORTING_SQLITE"] %>
+    database_tasks: false
+<% else %>
+    <<: *reporting
+<% end %>
+  cache:
+    <<: *postgres
+    database: csr_agent_development_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *postgres
+    database: csr_agent_development_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *postgres
+    database: csr_agent_development_cable
+    migrations_paths: db/cable_migrate
+
+# The "test" primary is erased between runs. The reporting connection never
+# reaches a real server: tests stub the staging table in SQLite.
+test:
+  primary:
+    <<: *postgres
+    database: csr_agent_test
+  reporting:
+    <<: *sqlite
+    database: <%= ENV.fetch("CSR_REPORTING_SQLITE", "storage/test_reporting.sqlite3") %>
+    database_tasks: false
+
+production:
+  primary:
+    <<: *app_production
+    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>
+  reporting:
+    <<: *reporting
+  cache:
+    <<: *app_production
+    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *app_production
+    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *app_production
+    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_cable
+    migrations_paths: db/cable_migrate
