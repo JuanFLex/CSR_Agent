@@ -10,6 +10,18 @@
 #     schedule: at 5am every day
 
 production:
+  # OSOR is reloaded twice a day, but polling is almost free: the job reads a
+  # single MAX(lastupdate) and returns :skipped without touching a row when the
+  # watermark has not moved. Polling every 15 minutes means the portal picks a
+  # load up when it lands rather than when we guessed it would, and the 94
+  # runs a day that find nothing cost one trivial query each.
+  #
+  # No args: the region comes from the job's own default, so Csr::DEFAULT_REGION
+  # stays the single place that names it.
+  osor_ingest:
+    class: Csr::OsorIngestJob
+    schedule: every 15 minutes
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

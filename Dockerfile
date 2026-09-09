@@ -25,6 +25,13 @@ ENV RAILS_ENV="production" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development"
 
+# Run the Solid Queue supervisor inside Puma, which config/puma.rb wires up when
+# this is set. The supervisor is what runs both the workers and the recurring
+# schedule in config/recurring.yml, so without it the OSOR ingest never fires
+# and the portal serves "no active snapshot" indefinitely. Drop this and run
+# ./bin/jobs as its own process the day the portal outgrows one container.
+ENV SOLID_QUEUE_IN_PUMA="1"
+
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
