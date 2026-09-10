@@ -1,0 +1,38 @@
+<%# locals: (escalations:) %>
+<%# Escalations attach by MPN, not by the CPN|MPN key: a FET carries no CPN, so
+    one escalation can belong to several keys. It is listed against the MPN it
+    was raised on, and never folded into the risk card — the Excel's rule for
+    that ("Priority contains RED") has no column behind it. %>
+<section class="panel">
+  <header class="panel-head">
+    <h2>Escalations (FET) <span class="count">(<%= escalations.size %>)</span></h2>
+    <% if (down = escalations.count(&:line_down?)).positive? %>
+      <span class="multi-hint"><span class="pill late">Line down</span><%= pluralize(down, "escalation") %></span>
+    <% end %>
+  </header>
+  <table class="escalations">
+    <thead>
+      <tr>
+        <th>FET #</th><th>MPN</th><th>Type</th><th>Opened</th><th class="num">Days open</th>
+        <th class="num">Shortage</th><th>Owner</th><th>Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% escalations.each do |escalation| %>
+        <tr class="<%= "miss" if escalation.line_down? %>">
+          <td><code><%= escalation.escalation_number %></code></td>
+          <td><code><%= escalation.mpn %></code></td>
+          <td><%= escalation.escalation_type.to_s.titleize %></td>
+          <td><%= short_date(escalation.date_opened) %></td>
+          <td class="num"><%= escalation.days_open %></td>
+          <td class="num"><%= number_with_delimiter escalation.shortage_qty.to_i %></td>
+          <td><%= escalation.owner_name %></td>
+          <td>
+            <% if escalation.line_down? %><span class="pill late">Line down</span><% end %>
+            <% if escalation.item_on_allocation == "Y" %><span class="pill unconfirmed">Allocation</span><% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

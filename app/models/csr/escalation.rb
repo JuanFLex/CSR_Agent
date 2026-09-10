@@ -14,5 +14,9 @@ module Csr
     scope :for_keys, ->(keys) { where(mpn: PartKey.where(id: keys).select(:mpn)) }
 
     def open? = escalation_status.to_s.casecmp("closed") != 0
+
+    # The one severity flag CSR_FET actually carries. Priority (T0-T3) lives in
+    # the escalation spreadsheet, not in this table.
+    def line_down? = line_down == "Y"
   end
 end

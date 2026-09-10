@@ -36,6 +36,9 @@
           <%= render "keys", keys: @keys, context: @context %>
           <%= render "narrative", search: @search, summary: @summary, context: @context %>
         </div>
+        <% if @escalations.any? %>
+          <%= render "escalations", escalations: @escalations %>
+        <% end %>
         <%= render "lines", lines: @lines, summary: @summary, search: @search %>
       <% end %>
     <% end %>

@@ -8,8 +8,12 @@ module ActiveSupport
   class TestCase
     include ActiveRecord::Assertions::QueryAssertions
 
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # The reporting stand-in is a single SQLite file, and parallel workers lock
+    # each other out of it. The whole suite runs in a couple of seconds, so one
+    # process is faster than paying for that contention.
+    # ponytail: serial tests; give each worker its own staging file the day the
+    # suite is slow enough to need parallelism.
+    parallelize(workers: 1)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all

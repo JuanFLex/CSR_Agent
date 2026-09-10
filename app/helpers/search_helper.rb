@@ -63,6 +63,14 @@ module SearchHelper
       points << "#{pluralize(summary[:unconfirmed], "line")} with no committed date yet."
     end
 
+    if (escalations = search.escalations).any?
+      down = escalations.count(&:line_down?)
+      points << safe_join([
+        tag.strong(pluralize(escalations.size, "open escalation")), " on these MPNs",
+        down.positive? ? safe_join([ ", ", tag.strong("#{down} with the line down", class: "bad") ]) : "", "."
+      ])
+    end
+
     spanning = context.count { |_id, ctx| spans_many?(ctx) }
     if spanning.positive?
       points << safe_join([ tag.strong(pluralize(spanning, "key")), " #{spanning == 1 ? "spans" : "span"} more than one FPN, customer or plant." ])

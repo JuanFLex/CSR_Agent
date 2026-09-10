@@ -24,6 +24,7 @@ class SearchController < ApplicationController
     @keys = @search.part_keys.order(:key_value).to_a
     @context = @search.context
     @lines = @search.lines.to_a
+    @escalations = @search.escalations.to_a
   end
 
   def lines_csv

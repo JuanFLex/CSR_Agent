@@ -62,6 +62,16 @@ module Csr
       end
     end
 
+    # The open escalations raised against the MPNs of these keys. Measured on
+    # the real feed, matching by MPN already covers every escalation that FPN
+    # would have matched, so there is no second criterion to maintain.
+    def escalations
+      @escalations ||= begin
+        snapshot = sources["escalation"]
+        snapshot ? Escalation.in_snapshot(snapshot).for_keys(part_keys).order(:mpn, :date_opened) : Escalation.none
+      end
+    end
+
     def lines(limit: MAX_LINES)
       scoped_lines.order(:cdd, :so, :so_pos).limit(limit)
     end

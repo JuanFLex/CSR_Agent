@@ -22,8 +22,8 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   test "marks every source without an active snapshot as not loaded" do
     get root_url, params: { search_type: "cpn", value: "CPN-100" }
 
-    assert_select ".sources .source.live", count: 1
-    assert_select ".sources .source.not-loaded", count: 4
+    assert_select ".sources .source.live", count: 2
+    assert_select ".sources .source.not-loaded", count: 3
   end
 
   test "summarizes the search and offers it as an email draft" do
@@ -31,6 +31,14 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".narrative li", minimum: 1
     assert_select ".narrative a[href^='mailto:?'][href*='subject=CSR'][href*='body=CPN']"
+  end
+
+  test "lists the open escalations raised against the searched MPNs" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select "table.escalations tbody tr", count: 2
+    assert_select "table.escalations tbody tr.miss td", text: /20250716610058.2/
+    assert_select ".narrative li", text: /2 open escalations on these MPNs, 1 with the line down/
   end
 
   test "exports every open line of the search as CSV" do

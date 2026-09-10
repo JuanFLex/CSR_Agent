@@ -3,6 +3,10 @@ require "test_helper"
 module Csr
   module Fet
     class IngestTest < ActiveSupport::TestCase
+      # The fixtures carry an active escalation snapshot for the view tests.
+      # These tests are about what an ingest finds, so they start from nothing.
+      setup { Snapshot.for_source("escalation").active.update_all(status: "superseded") }
+
       test "copies the open escalations into a snapshot and normalizes the part handles" do
         result = ingest(rows: [ row, row("ESCALATION_NUMBER" => "20250716610058.3", "MFG_PARTNO" => " KSC721JLFS ") ])
 
@@ -63,7 +67,7 @@ module Csr
 
       # Only the read side of the staging table is faked; snapshots and
       # escalations go through Postgres.
-      def ingest(rows:, watermark: Time.utc(2026, 9, 10), **options)
+      def ingest(rows:, watermark: Time.utc(2026, 9, 11), **options)
         staging = FakeStaging.new(rows: rows, watermark: watermark)
         Ingest.new(staging: staging, **options).call
       end
