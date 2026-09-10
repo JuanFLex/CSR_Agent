@@ -1,25 +1,36 @@
-<%# locals: (lines:, summary:) %>
-<h2>Líneas abiertas <span class="count">(<%= lines.size %><%= " de #{summary[:open_lines]}" if lines.size < summary[:open_lines] %>)</span></h2>
-
-<table class="lines">
-  <thead>
-    <tr>
-      <th>CPO</th><th>SO</th><th>PO</th><th>Cant.</th>
-      <th>PDD</th><th>CDD</th><th>Estatus</th><th>Fechas</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% lines.each do |line| %>
-      <tr class="<%= "miss" if line.miss %>">
-        <td><%= line.cpo %><%= "-#{line.cpo_pos}" if line.cpo_pos %></td>
-        <td><%= line.so %><%= "-#{line.so_pos}" if line.so_pos %></td>
-        <td><%= line.po %></td>
-        <td class="num"><%= number_with_delimiter line.baan_ordered.to_i %></td>
-        <td><%= line.pdd&.to_date %></td>
-        <td><%= line.cdd&.to_date || "—" %></td>
-        <td><%= line.so_status %></td>
-        <td><%= line.dates_condition %></td>
-      </tr>
+<%# locals: (lines:, summary:, search:) %>
+<%# The MPN column matters: with two keys in play, each line has to say which one it belongs to. %>
+<section class="panel">
+  <header class="panel-head">
+    <h2>Open orders <span class="count">(<%= number_with_delimiter lines.size %><%= " of #{number_with_delimiter summary[:open_lines]}" if lines.size < summary[:open_lines] %>)</span></h2>
+    <%# turbo: false — a link inside the frame would otherwise try to render the CSV into it. %>
+    <%= link_to search_path(format: :csv, search_type: search.search_type, value: search.value, region: search.region),
+                class: "button", download: "", data: { turbo: false } do %>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v8M4.5 6.8L8 10.2l3.5-3.4M2.5 13.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Export CSV
     <% end %>
-  </tbody>
-</table>
+  </header>
+  <table class="lines">
+    <thead>
+      <tr>
+        <th>CPO</th><th>SO</th><th>PO</th><th>MPN</th><th class="num">Qty</th>
+        <th>Need (PDD)</th><th>ETD (CDD)</th><th>SO status</th><th>Risk</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% lines.each do |line| %>
+        <tr class="<%= "miss" if line.miss %>">
+          <td><code><%= order_ref(line.cpo, line.cpo_pos) %></code></td>
+          <td><code><%= order_ref(line.so, line.so_pos) %></code></td>
+          <td><code><%= line.po || "—" %></code></td>
+          <td><code><%= line.mpn %></code></td>
+          <td class="num"><%= number_with_delimiter line.baan_ordered.to_i %></td>
+          <td><%= short_date(line.pdd) %></td>
+          <td><%= short_date(line.cdd) %></td>
+          <td><%= line.so_status %></td>
+          <td><%= risk_pill(line) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

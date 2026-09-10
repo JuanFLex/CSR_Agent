@@ -16,7 +16,8 @@ module Csr
           misses: 2,
           etd_min: Time.utc(2026, 9, 9, 8),
           etd_max: Time.utc(2026, 9, 12, 8),
-          open_qty: BigDecimal("19.5")
+          open_qty: BigDecimal("19.5"),
+          unconfirmed: 1
         },
         numbers
       )
@@ -30,14 +31,15 @@ module Csr
           misses: 0,
           etd_min: Time.utc(2026, 1, 1, 8),
           etd_max: Time.utc(2026, 1, 1, 8),
-          open_qty: BigDecimal("9999")
+          open_qty: BigDecimal("9999"),
+          unconfirmed: 0
         },
         numbers(snapshot: csr_snapshots(:previous))
       )
     end
 
     test "returns empty numbers while preserving the count of keys without lines" do
-      empty = { combos_found: 0, open_lines: 0, misses: 0, etd_min: nil, etd_max: nil, open_qty: 0 }
+      empty = { combos_found: 0, open_lines: 0, misses: 0, etd_min: nil, etd_max: nil, open_qty: 0, unconfirmed: 0 }
 
       assert_equal empty, numbers(PartKey.none)
       assert_equal empty.merge(combos_found: 1), numbers(PartKey.where(id: csr_part_keys(:without_lines).id))
@@ -51,7 +53,7 @@ module Csr
               .update_all(baan_ordered: nil, cdd: nil)
 
       assert_equal(
-        { combos_found: 3, open_lines: 4, misses: 2, etd_min: nil, etd_max: nil, open_qty: 0 },
+        { combos_found: 3, open_lines: 4, misses: 2, etd_min: nil, etd_max: nil, open_qty: 0, unconfirmed: 4 },
         numbers
       )
     end
@@ -65,7 +67,7 @@ module Csr
 
       Snapshot.stub(:current, ->(*) { flunk "The caller must select the snapshot" }) do
         assert_equal(
-          { combos_found: 0, open_lines: 0, misses: 0, etd_min: nil, etd_max: nil, open_qty: 0 },
+          { combos_found: 0, open_lines: 0, misses: 0, etd_min: nil, etd_max: nil, open_qty: 0, unconfirmed: 0 },
           numbers(snapshot: nil)
         )
       end

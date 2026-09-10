@@ -15,7 +15,8 @@ module Api
           "combos_found" => 2, "open_lines" => 4, "misses" => 2,
           "etd_min" => Time.utc(2026, 9, 9, 8).as_json,
           "etd_max" => Time.utc(2026, 9, 12, 8).as_json,
-          "open_qty" => BigDecimal("19.5").as_json
+          "open_qty" => BigDecimal("19.5").as_json,
+          "unconfirmed" => 1
         },
         response.parsed_body.fetch("execution")
       )
@@ -79,7 +80,7 @@ module Api
 
       assert_response :success
       assert_select "table.lines tbody tr", count: 500
-      assert_select "h2 .count", text: "(500 de 501)"
+      assert_select "h2 .count", text: "(500 of 501)"
     end
 
     test "all endpoints return empty results and metadata without an active snapshot" do
@@ -89,7 +90,7 @@ module Api
         api_status_url => {
           "execution" => {
             "combos_found" => 0, "open_lines" => 0, "misses" => 0,
-            "etd_min" => nil, "etd_max" => nil, "open_qty" => 0
+            "etd_min" => nil, "etd_max" => nil, "open_qty" => 0, "unconfirmed" => 0
           }
         },
         api_keys_url => { "count" => 0, "keys" => [] },
@@ -104,7 +105,7 @@ module Api
       get root_url, params: { search_type: "cpn", value: "CPN-100" }
 
       assert_response :success
-      assert_select ".warn", text: /snapshot de OSOR activo/
+      assert_select ".warn", text: /No OSOR snapshot is active yet/
     end
 
     private

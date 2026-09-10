@@ -22,6 +22,8 @@ gem "sqlite3", ">= 2.1"
 # every to_json call, which breaks all JSON rendering. Pinned until Rails stops
 # sending it.
 gem "json", "~> 2.7"
+# CSV export of open orders. csv leaves Ruby's default gems in 3.4, so declare it.
+gem "csv"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"

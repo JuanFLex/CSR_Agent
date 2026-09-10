@@ -1,25 +1,43 @@
-<div class="panel">
-  <h1>CSR Supply Visibility <span class="region"><%= @search.region %></span></h1>
+<header class="topbar">
+  <h1 class="brand">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="#1d64d8"/><path d="M6 17h4l3-7 3 10 2-5h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    CSR Supply Visibility <span class="region"><%= @search.region %></span>
+  </h1>
 
   <%= form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "search" do |f| %>
-    <%= f.select :search_type,
-                 Csr::SearchRequest.options_for_select,
-                 { selected: @search.search_type }, class: "type" %>
-    <%= f.text_field :value, value: @search.value, placeholder: "CPN, MPN, CPO-Line, SO o FPN…",
-                     autofocus: true, autocomplete: "off" %>
-    <%= f.submit "Buscar", class: "go" %>
+    <%= f.select :search_type, Csr::SearchRequest.options_for_select,
+                 { selected: @search.search_type }, class: "type", aria: { label: "Search by" } %>
+    <%= f.text_field :value, value: @search.value, placeholder: "Enter CPN, MPN, CPO-Line, SO or FPN…",
+                     autofocus: true, autocomplete: "off", aria: { label: "Search value" } %>
+    <%= button_tag type: "submit", name: nil, class: "go" do %>
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.8" stroke="currentColor" stroke-width="1.8"/><path d="M10.6 10.6L14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Search
+    <% end %>
   <% end %>
-</div>
+</header>
 
-<%= turbo_frame_tag "results" do %>
-  <% if @search.blank? %>
-    <p class="hint">Busca por CPN, MPN, CPO+Línea, SO o FPN. Un CPN con varios MPN devuelve una fila por combinación.</p>
-  <% elsif @search.snapshot.nil? %>
-    <p class="warn">Todavía no hay un snapshot de OSOR activo. Corre el ingest antes de buscar.</p>
-  <% elsif @summary[:combos_found].zero? %>
-    <p class="warn">Sin resultados para <strong><%= @search.label %></strong> = <code><%= @search.value %></code>.</p>
-  <% else %>
-    <%= render "summary", summary: @summary, keys: @keys, context: @context, snapshot: @search.snapshot %>
-    <%= render "lines", lines: @lines, summary: @summary %>
+<main class="page">
+  <%= turbo_frame_tag "results" do %>
+    <% if @search.blank? %>
+      <p class="hint">Search by CPN, MPN, CPO+Line, SO or FPN. A CPN carrying several MPNs returns one row per combination.</p>
+    <% elsif @search.snapshot.nil? %>
+      <p class="warn">No OSOR snapshot is active yet. Run the ingest before searching.</p>
+    <% else %>
+      <div class="query">
+        <p class="echo"><span class="muted"><%= @search.label %></span> <code><%= @search.value %></code> <span class="muted">· <%= pluralize(@summary[:combos_found], "part key") %></span></p>
+        <%= render "sources", sources: @search.sources %>
+      </div>
+
+      <% if @summary[:combos_found].zero? %>
+        <p class="warn">No results for <strong><%= @search.label %></strong> = <code><%= @search.value %></code>.</p>
+      <% else %>
+        <%= render "summary", summary: @summary %>
+        <div class="split">
+          <%= render "keys", keys: @keys, context: @context %>
+          <%= render "narrative", search: @search, summary: @summary, context: @context %>
+        </div>
+        <%= render "lines", lines: @lines, summary: @summary, search: @search %>
+      <% end %>
+    <% end %>
   <% end %>
-<% end %>
+</main>
