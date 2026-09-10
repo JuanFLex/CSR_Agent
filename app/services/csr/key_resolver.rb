@@ -7,8 +7,6 @@ module Csr
   # legitimately produces two rows; the same CPN|MPN across six order lines
   # produces one row with Open Lines = 6.
   class KeyResolver
-    Query = Struct.new(:search_type, :value, :cpo, :cpo_pos, keyword_init: true)
-
     def initialize(search_type:, value:, snapshot:, region: DEFAULT_REGION)
       @search_type = search_type.to_s.downcase
       @value = value.to_s.strip

@@ -105,25 +105,16 @@ module Csr
 
         return [ {}, key_values ] if candidates.empty?
 
-        candidate_values = candidates.map { |c| c[:key_value] }
-        existing = PartKey.where(region: @region, key_value: candidate_values).pluck(:key_value, :id).to_h
+        # ON CONFLICT DO NOTHING rather than read-then-insert: a scheduled run
+        # and a forced one can overlap (Snapshot#activate! is built for that),
+        # and both may try to create the same new key. The loser skips it
+        # instead of failing its whole load on the unique index. All writes go
+        # to Postgres, so there is no other adapter to stay neutral for.
+        PartKey.insert_all(candidates, unique_by: %i[region key_value])
+        ids = PartKey.where(region: @region, key_value: candidates.map { |c| c[:key_value] })
+                     .pluck(:key_value, :id).to_h
 
-        # Insert only what is genuinely new, rather than leaning on upsert. The
-        # ingest is single-threaded and scheduled, so the read-then-insert is
-        # safe here, and it keeps the code free of adapter-specific MERGE/ON
-        # CONFLICT behaviour.
-        fresh = candidates.reject { |c| existing.key?(c[:key_value]) }
-
-        if fresh.any?
-          now = Time.current
-          PartKey.insert_all!(fresh.map { |c| c.merge(created_at: now, updated_at: now) })
-          existing.merge!(
-            PartKey.where(region: @region, key_value: fresh.map { |c| c[:key_value] })
-                   .pluck(:key_value, :id).to_h
-          )
-        end
-
-        [ existing, key_values ]
+        [ ids, key_values ]
       end
 
       # The difference between "live" and "sometimes blank": a snapshot only

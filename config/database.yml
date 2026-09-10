@@ -1,7 +1,7 @@
 # Two engines, and the split is the whole point.
 #
 #   primary    PostgreSQL. The app's own tables — users, snapshots, part keys,
-#              order lines — plus the Solid Cache/Queue/Cable databases. Fully
+#              order lines — plus the Solid Queue database. Fully
 #              read/write: migrations, seeds and normal development happen here,
 #              and `db:reset` can never reach anything the app does not own.
 #
@@ -19,7 +19,7 @@
 #
 #   CSR_APP_DB_HOST       PostgreSQL host                    (default: localhost)
 #   CSR_APP_DB_PORT       PostgreSQL port                    (default: 5432)
-#   CSR_APP_DB_NAME       base name; the Solid databases append _cache/_queue/_cable
+#   CSR_APP_DB_NAME       base name; Solid Queue appends _queue
 #   CSR_APP_DB_USER       login for the app's own databases
 #   CSR_APP_DB_PASSWORD
 #
@@ -83,18 +83,10 @@ development:
 <% else %>
     <<: *reporting
 <% end %>
-  cache:
-    <<: *postgres
-    database: csr_agent_development_cache
-    migrations_paths: db/cache_migrate
   queue:
     <<: *postgres
     database: csr_agent_development_queue
     migrations_paths: db/queue_migrate
-  cable:
-    <<: *postgres
-    database: csr_agent_development_cable
-    migrations_paths: db/cable_migrate
 
 # The "test" primary is erased between runs. The reporting connection never
 # reaches a real server: tests stub the staging table in SQLite.
@@ -113,15 +105,7 @@ production:
     database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>
   reporting:
     <<: *reporting
-  cache:
-    <<: *app_production
-    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_cache
-    migrations_paths: db/cache_migrate
   queue:
     <<: *app_production
     database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_queue
     migrations_paths: db/queue_migrate
-  cable:
-    <<: *app_production
-    database: <%= ENV.fetch("CSR_APP_DB_NAME", "csr_agent_production") %>_cable
-    migrations_paths: db/cable_migrate
