@@ -1,0 +1,16 @@
+<%# locals: (search:, summary:, context:) %>
+<% points = summary_points(search, summary, context) %>
+<section class="panel narrative">
+  <h2>Summary</h2>
+  <ul>
+    <% points.each do |point| %>
+      <li><%= point %></li>
+    <% end %>
+  </ul>
+  <%= mail_to "", class: "button primary",
+              subject: "CSR supply status: #{search.label} #{search.value}",
+              body: summary_email_body(search, points) do %>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.8" y="3.2" width="12.4" height="9.6" rx="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 4.2L8 8.6l5.5-4.4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    Copy to email
+  <% end %>
+</section>

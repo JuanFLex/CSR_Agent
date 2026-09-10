@@ -14,13 +14,14 @@ module Csr
     def call
       return empty if @snapshot.nil?
 
-      combos_found, open_lines, misses, etd_min, etd_max, open_qty = lines.pick(
+      combos_found, open_lines, misses, etd_min, etd_max, open_qty, unconfirmed = lines.pick(
         key_count_query,
         Arel.sql("COUNT(*)"),
         Arel.sql("COUNT(*) FILTER (WHERE miss)"),
         Arel.sql("MIN(cdd)"),
         Arel.sql("MAX(cdd)"),
-        Arel.sql("COALESCE(SUM(baan_ordered), 0)")
+        Arel.sql("COALESCE(SUM(baan_ordered), 0)"),
+        Arel.sql("COUNT(*) FILTER (WHERE cdd IS NULL)")
       )
 
       {
@@ -29,7 +30,8 @@ module Csr
         misses:       misses,                # SUMMARY!B5 / E8
         etd_min:      etd_min,               # SUMMARY!B6
         etd_max:      etd_max,
-        open_qty:     open_qty               # SUMMARY!B7
+        open_qty:     open_qty,              # SUMMARY!B7
+        unconfirmed:  unconfirmed            # lines with no committed date
       }
     end
 
@@ -47,7 +49,7 @@ module Csr
     def empty
       {
         combos_found: 0, open_lines: 0, misses: 0, etd_min: nil, etd_max: nil,
-        open_qty: 0
+        open_qty: 0, unconfirmed: 0
       }
     end
   end

@@ -53,13 +53,32 @@ module Csr
       @context ||= KeyContext.new(part_keys, snapshot: snapshot).call
     end
 
+    # The active snapshot of every source, nil for one never loaded — the
+    # freshness chips. One query rather than one per source.
+    def sources
+      @sources ||= begin
+        active = Snapshot.active.where(region: @region).order(:activated_at).index_by(&:source_type)
+        Snapshot::SOURCE_TYPES.index_with { |type| active[type] }
+      end
+    end
+
     def lines(limit: MAX_LINES)
+      scoped_lines.order(:cdd, :so, :so_pos).limit(limit)
+    end
+
+    # The late line with the widest gap between commit and need.
+    def worst_slip
+      return @worst_slip if defined?(@worst_slip)
+
+      @worst_slip = scoped_lines.missed.order(Arel.sql("cdd - pdd DESC"), :so, :so_pos).first
+    end
+
+    private
+
+    def scoped_lines
       return OsorLine.none if snapshot.nil?
 
-      OsorLine.in_snapshot(snapshot)
-              .for_keys(part_keys.select(:id))
-              .order(:cdd, :so, :so_pos)
-              .limit(limit)
+      OsorLine.in_snapshot(snapshot).for_keys(part_keys.select(:id))
     end
   end
 end

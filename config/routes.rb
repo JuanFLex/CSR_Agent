@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root "search#index"
+  get "search" => "search#index", as: :search  # same page; carries .csv for the export
 
   # Endpoint names follow the Web/API mapping in build book Vol.2 §21 so the
   # document keeps describing the system after the Excel is retired.

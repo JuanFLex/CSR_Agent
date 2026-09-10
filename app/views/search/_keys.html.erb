@@ -1,0 +1,30 @@
+<%# locals: (keys:, context:) %>
+<%# A key can span several FPNs, customers or plants. The Excel had to pick one;
+    here they are all listed, and a key spanning more than one is marked,
+    because that is precisely where the workbook misreports. %>
+<section class="panel">
+  <header class="panel-head">
+    <h2>Part keys <span class="count">(<%= keys.size %>)</span></h2>
+    <% if context.any? { |_id, ctx| spans_many?(ctx) } %>
+      <span class="multi-hint"><span class="swatch"></span>More than one value — check which one the customer means</span>
+    <% end %>
+  </header>
+  <table class="keys">
+    <thead><tr><th>Key (CPN|MPN)</th><th>FPN</th><th>Customer</th><th>Plant</th></tr></thead>
+    <tbody>
+      <% keys.each do |key| %>
+        <% ctx = context[key.id] || {} %>
+        <tr>
+          <td><code><%= key.key_value %></code></td>
+          <% SearchHelper::KEY_DIMENSIONS.each do |dimension| %>
+            <% values = Array(ctx[dimension]) %>
+            <td class="<%= "multi" if values.many? %>">
+              <%= values.presence&.join(" · ") || "—" %>
+              <% if values.many? %><span class="badge"><%= values.size %></span><% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
