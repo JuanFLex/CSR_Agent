@@ -7,8 +7,13 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
+  # Month and day, plus the year when it is not this one, so a past-due or
+  # next-year line cannot pass for this year's.
   def short_date(time)
-    time ? l(time.to_date, format: :short) : "—"
+    return "—" unless time
+
+    date = time.to_date
+    l(date, format: date.year == Date.current.year ? :short : :short_with_year)
   end
 
   def order_ref(number, position)

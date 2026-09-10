@@ -1,4 +1,7 @@
 en:
+  date:
+    formats:
+      short_with_year: "%b %d, %Y"
   sources:
     osor: "OSOR"
     buffer: "Buffer"
