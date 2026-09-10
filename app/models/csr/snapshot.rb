@@ -7,6 +7,7 @@ module Csr
     SOURCE_TYPES = %w[osor buffer commit demand escalation].freeze
 
     has_many :osor_lines, dependent: :delete_all, inverse_of: :snapshot
+    has_many :escalations, dependent: :delete_all, inverse_of: :snapshot
 
     enum :status, {
       loading:    "loading",

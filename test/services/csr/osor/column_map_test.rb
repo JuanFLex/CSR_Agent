@@ -4,7 +4,7 @@ module Csr
   module Osor
     class ColumnMapTest < ActiveSupport::TestCase
       test "coerces null tokens and trims strings" do
-        [ nil, *ColumnMap::NULL_TOKENS, " NULL ", " null ", " - ", "  " ].each do |value|
+        [ nil, *Csr::ColumnCast::NULL_TOKENS, " NULL ", " null ", " - ", "  " ].each do |value|
           [ :string, :decimal, :integer, :datetime ].each do |type|
             assert_nil ColumnMap.coerce(value, type), "#{value.inspect} as #{type}"
           end
@@ -22,7 +22,7 @@ module Csr
       end
 
       test "rejects epoch sentinel times and preserves real driver timestamps" do
-        [ Time.utc(1969, 12, 31), Time.utc(1970, 1, 1), ColumnMap::EPOCH_SENTINEL ].each do |time|
+        [ Time.utc(1969, 12, 31), Time.utc(1970, 1, 1), Csr::ColumnCast::EPOCH_SENTINEL ].each do |time|
           assert_nil ColumnMap.coerce(time, :datetime)
         end
 
@@ -42,7 +42,7 @@ module Csr
 
       test "rejects string epochs and invalid dates without hiding unexpected parser errors" do
         Time.use_zone("America/Mexico_City") do
-          [ "1970-01-01 00:00:00", ColumnMap::EPOCH_SENTINEL.iso8601,
+          [ "1970-01-01 00:00:00", Csr::ColumnCast::EPOCH_SENTINEL.iso8601,
             "", " ", "invalid", "2026-13-07 15:38:31" ].each do |value|
             assert_nil ColumnMap.to_time(value), value.inspect
           end

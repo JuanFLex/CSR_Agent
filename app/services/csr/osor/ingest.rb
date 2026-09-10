@@ -1,62 +1,26 @@
 module Csr
   module Osor
-    # Copies CSR_OSOR_AMERICAS into a new snapshot and activates it only if the
-    # load looks sane.
+    # Copies CSR_OSOR_AMERICAS into a new snapshot.
     #
-    # The DBA reloads that staging table with truncate+insert. Reading it live
-    # would mean serving an empty portal for the length of every load, so this
-    # service takes a copy instead: new snapshot, then an atomic flip. Readers
-    # always see a complete picture, and last week's picture is still there.
-    class Ingest
-      # A load that arrives more than this much smaller than the last good one
-      # is treated as a truncated or partial export rather than as news.
-      DEFAULT_SHRINK_TOLERANCE = 0.30
-
-      INSERT_BATCH = 1_000
-
-      Result = Struct.new(:status, :snapshot, :message, keyword_init: true) do
-        def activated? = status == :activated
-        def skipped?   = status == :skipped
-        def failed?    = status == :failed
-      end
-
-      def initialize(region: DEFAULT_REGION, force: false, shrink_tolerance: DEFAULT_SHRINK_TOLERANCE)
-        @region = region
-        @force = force
-        @shrink_tolerance = shrink_tolerance
+    # Csr::SourceIngest holds the snapshot lifecycle and the guards; what is
+    # OSOR's own is the staging table, the part keys every line resolves to,
+    # and the miss flag.
+    class Ingest < SourceIngest
+      def initialize(region: DEFAULT_REGION, **options)
+        super
         @staging = Reporting::OsorStaging.for_region(region)
-      end
-
-      def call
-        watermark = @staging.watermark
-        previous = Snapshot.current("osor", region: @region)
-
-        # Nothing new since the last load. This is the common case when polling.
-        if !@force && previous && watermark && previous.source_modified_at &&
-           watermark <= previous.source_modified_at
-          return Result.new(status: :skipped, snapshot: previous,
-                            message: "#{@staging.table_name} unchanged since #{watermark.iso8601}")
-        end
-
-        snapshot = Snapshot.create!(
-          region: @region, source_type: "osor", status: :loading,
-          source_file: @staging.table_name, source_modified_at: watermark,
-          started_at: Time.current
-        )
-
-        load_rows(snapshot)
-        guard_and_activate(snapshot, previous)
-      rescue StandardError => e
-        snapshot&.fail!("#{e.class}: #{e.message}")
-        Result.new(status: :failed, snapshot: snapshot, message: e.message)
       end
 
       private
 
+      attr_reader :staging
+
+      def source_type = "osor"
+
       def load_rows(snapshot)
         # select_all rather than instantiating 11k read-only records: the
         # ColumnMap works on raw rows anyway.
-        rows = @staging.connection.select_all(@staging.all.to_sql).to_a
+        rows = staging.connection.select_all(staging.all.to_sql).to_a
         rejected = 0
         inserted = 0
 
@@ -117,31 +81,8 @@ module Csr
         [ ids, key_values ]
       end
 
-      # The difference between "live" and "sometimes blank": a snapshot only
-      # becomes visible if it carries data and is not dramatically smaller than
-      # the last good one. Otherwise it is parked and the previous one keeps
-      # serving.
-      def guard_and_activate(snapshot, previous)
-        if snapshot.row_count.zero?
-          snapshot.fail!("Staging table returned 0 rows; kept previous snapshot active")
-          return Result.new(status: :failed, snapshot: snapshot, message: "0 rows")
-        end
-
-        if previous&.row_count&.positive?
-          shrink = 1.0 - (snapshot.row_count.to_f / previous.row_count)
-          if shrink > @shrink_tolerance
-            reason = format(
-              "Row count fell %.1f%% (%d -> %d), beyond the %.0f%% tolerance; kept previous snapshot active",
-              shrink * 100, previous.row_count, snapshot.row_count, @shrink_tolerance * 100
-            )
-            snapshot.fail!(reason)
-            return Result.new(status: :failed, snapshot: snapshot, message: reason)
-          end
-        end
-
-        snapshot.activate!
-        Result.new(status: :activated, snapshot: snapshot,
-                   message: "Activated #{snapshot.row_count} lines (#{snapshot.rejected_count} without a key)")
+      def activation_message(snapshot)
+        "Activated #{snapshot.row_count} lines (#{snapshot.rejected_count} without a key)"
       end
     end
   end

@@ -9,13 +9,9 @@ module Csr
     # the codebase, nobody can read Vol.2 and follow the app. So it lives here,
     # once.
     module ColumnMap
-      # Baan writes the Unix epoch where it means "no date". Anything at or
-      # before this is not a real date and must not be treated as one — a
-      # 1970 CDD would otherwise read as wildly early rather than as missing.
-      EPOCH_SENTINEL = Time.utc(1970, 1, 2).freeze
-
-      # Strings Baan uses to mean "empty".
-      NULL_TOKENS = [ "NULL", "null", "-", "" ].freeze
+      # The casting itself — epoch sentinels, "NULL" strings, separators in
+      # numbers — is the same for every source and lives in Csr::ColumnCast.
+      extend Csr::ColumnCast
 
       # staging column (downcased) => [ attribute, type ]
       COLUMNS = {
@@ -96,69 +92,6 @@ module Csr
       # this app recomputes itself (SQPID, numitems, sourg, maucprice,
       # SOPPVPrice, SOPPVTotal, LoadSPQMistmatch, porefa, itemspq, itemmoq,
       # pivotd, SOS). Add one here the day a screen actually needs it.
-
-      module_function
-
-      # Turn one staging row into attributes for Csr::OsorLine.
-      def cast(row)
-        attrs = {}
-
-        row.each do |raw_column, raw_value|
-          mapping = COLUMNS[raw_column.to_s.downcase]
-          next unless mapping
-
-          attribute, type = mapping
-          attrs[attribute] = coerce(raw_value, type)
-        end
-
-        attrs
-      end
-
-      def coerce(value, type)
-        return nil if value.nil?
-        return nil if value.is_a?(String) && NULL_TOKENS.include?(value.strip)
-
-        case type
-        when :string   then value.to_s.strip.presence
-        when :decimal  then to_decimal(value)
-        when :integer  then to_decimal(value)&.to_i
-        when :datetime then to_time(value)
-        end
-      end
-
-      def to_decimal(value)
-        return value if value.is_a?(BigDecimal)
-        return BigDecimal(value.to_s) if value.is_a?(Numeric)
-
-        text = value.to_s.strip.delete(",")
-        return nil if text.empty?
-
-        BigDecimal(text)
-      rescue ArgumentError
-        nil
-      end
-
-      def to_time(value)
-        time =
-          case value
-          when Time, DateTime then value
-          when Date           then value.to_time
-          else
-            parsed = value.to_s.strip
-            return nil if parsed.empty?
-
-            begin
-              Time.zone.parse(parsed)
-            rescue ArgumentError
-              nil
-            end
-          end
-
-        return nil if time.nil?
-        return nil if time <= EPOCH_SENTINEL
-
-        time
-      end
     end
   end
 end
