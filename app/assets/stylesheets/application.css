@@ -46,7 +46,7 @@ code { font-family: var(--mono); font-size: 12px; }
 
 /* Page */
 .page { padding: 24px 32px 40px; }
-#results { display: flex; flex-direction: column; gap: 18px; max-width: 1376px; }
+#results { display: flex; flex-direction: column; gap: 18px; }
 
 .hint, .warn { margin: 0; max-width: 640px; color: var(--muted); }
 .warn { color: var(--red-ink); }

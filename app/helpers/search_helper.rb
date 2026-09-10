@@ -44,7 +44,9 @@ module SearchHelper
   def summary_points(search, summary, context)
     points = []
 
-    points << if summary[:misses].positive?
+    points << if summary[:open_lines] == 1
+      summary[:misses].positive? ? safe_join([ tag.strong("The only open line is late", class: "bad"), " (CDD > PDD)." ]) : "The only open line is on time."
+    elsif summary[:misses].positive?
       safe_join([ tag.strong("#{summary[:misses]} of #{summary[:open_lines]}", class: "bad"), " open lines are late (CDD > PDD)." ])
     else
       "None of the #{summary[:open_lines]} open lines is late."
