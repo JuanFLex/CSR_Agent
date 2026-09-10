@@ -38,8 +38,5 @@ module Csr
 
       "#{cpn}#{SEPARATOR}#{mpn}"
     end
-
-    def cpn_part = key_value.to_s.split(SEPARATOR, 2).first
-    def mpn_part = key_value.to_s.split(SEPARATOR, 2).last
   end
 end

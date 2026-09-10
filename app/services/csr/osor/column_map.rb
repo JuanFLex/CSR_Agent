@@ -96,7 +96,6 @@ module Csr
       # this app recomputes itself (SQPID, numitems, sourg, maucprice,
       # SOPPVPrice, SOPPVTotal, LoadSPQMistmatch, porefa, itemspq, itemmoq,
       # pivotd, SOS). Add one here the day a screen actually needs it.
-      SELECT_COLUMNS = COLUMNS.keys.freeze
 
       module_function
 
