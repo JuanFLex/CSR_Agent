@@ -7,24 +7,24 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
-  # Part handles read as codes, not prose.
-  ESCALATION_MONO_COLUMNS = %i[escalation_number mpn fpn].freeze
+  # Part numbers, order numbers and references read as codes, not prose.
+  MONO_COLUMNS = %i[
+    escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
+  ].freeze
 
-  def escalation_numeric_column?(column)
-    Csr::Escalation.type_for_attribute(column).type.in?(%i[integer decimal])
-  end
-
-  # One escalation cell, formatted by what the value is rather than by a list
-  # that would have to be kept in step with the column set.
-  def escalation_cell(escalation, column)
-    value = escalation.public_send(column)
+  # One table cell, formatted by what the value is rather than by a list that
+  # would have to be kept in step with the column set.
+  def column_cell(record, column)
+    value = record.public_send(column)
 
     case value
     when nil                 then "—"
     when Time, Date          then short_date(value)
-    when Numeric             then number_with_delimiter(value.to_i)
+    # Quantities are whole; prices are not. Truncating both to an integer is
+    # how a 0.44 unit price reads as zero.
+    when Numeric             then number_with_precision(value, precision: 4, delimiter: ",", strip_insignificant_zeros: true)
     else
-      ESCALATION_MONO_COLUMNS.include?(column) ? tag.code(value) : value.to_s
+      MONO_COLUMNS.include?(column) ? tag.code(value) : value.to_s
     end
   end
 

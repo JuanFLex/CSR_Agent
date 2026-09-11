@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_10_180000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -115,6 +115,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_10_180000) do
     t.datetime "source_last_update"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "project", limit: 100
+    t.string "so_urgent", limit: 50
+    t.string "po_ref_a", limit: 200
+    t.string "load_spq_mismatch", limit: 50
+    t.decimal "mauc_price", precision: 18, scale: 6
+    t.decimal "so_ppv_price", precision: 18, scale: 6
+    t.decimal "so_ppv_total", precision: 18, scale: 4
     t.index ["part_key_id"], name: "index_csr_osor_lines_on_part_key_id"
     t.index ["snapshot_id", "cpn"], name: "index_csr_osor_lines_on_snapshot_id_and_cpn"
     t.index ["snapshot_id", "cpo"], name: "index_csr_osor_lines_on_snapshot_id_and_cpo"

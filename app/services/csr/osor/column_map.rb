@@ -85,13 +85,21 @@ module Csr
         "refa"                => [ :ref_a,               :string ],
         "refb"                => [ :ref_b,               :string ],
 
-        "lastupdate"          => [ :source_last_update,  :datetime ]
+        "lastupdate"          => [ :source_last_update,  :datetime ],
+
+        # Shown by tOSOR, so the portal can show them too.
+        "sourg"               => [ :project,             :string ],
+        "sos"                 => [ :so_urgent,           :string ],
+        "porefa"              => [ :po_ref_a,            :string ],
+        "loadspqmistmatch"    => [ :load_spq_mismatch,   :string ],
+        "maucprice"           => [ :mauc_price,          :decimal ],
+        "soppvprice"          => [ :so_ppv_price,        :decimal ],
+        "soppvtotal"          => [ :so_ppv_total,        :decimal ]
       }.freeze
 
-      # Staging columns deliberately left out: they are pivot helpers or values
-      # this app recomputes itself (SQPID, numitems, sourg, maucprice,
-      # SOPPVPrice, SOPPVTotal, LoadSPQMistmatch, porefa, itemspq, itemmoq,
-      # pivotd, SOS). Add one here the day a screen actually needs it.
+      # Staging columns deliberately left out: SQPID, numitems, itemspq,
+      # itemmoq and pivotd. They are pivot helpers, and tOSOR does not show
+      # them to the Excel's user either.
     end
   end
 end

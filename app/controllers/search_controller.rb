@@ -25,16 +25,17 @@ class SearchController < ApplicationController
     @context = @search.context
     @lines = @search.lines.to_a
     @escalations = @search.escalations.to_a
-    @escalation_columns = escalation_columns
+    @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
+    @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
   end
 
-  # Which escalation columns to show. The choice travels in the URL so a
-  # search can be shared with it, and is remembered in a cookie so the next
-  # visit keeps it. There is no login yet, so the browser is the user.
-  def escalation_columns
-    requested = params[:columns] || cookies[:escalation_columns]&.split(",")
-    chosen = Csr::Escalation.columns_for(requested)
-    cookies.permanent[:escalation_columns] = chosen.join(",") if params[:columns]
+  # Which columns a table shows. The choice travels in the URL so a search can
+  # be shared with it, and is remembered in a cookie so the next visit keeps
+  # it. There is no login yet, so the browser is the user.
+  def chosen_columns(model, param)
+    requested = params[param] || cookies[param]&.split(",")
+    chosen = model.columns_for(requested)
+    cookies.permanent[param] = chosen.join(",") if params[param]
     chosen
   end
 

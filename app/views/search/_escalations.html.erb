@@ -11,32 +11,13 @@
     <% end %>
   </header>
 
-  <%# CSR_FET carries far more than a table can show at once, and which columns
-      matter depends on who is reading. The choice rides in the URL, so a search
-      can be shared with it, and sticks in a cookie for the next visit. %>
-  <details class="columns">
-    <summary>Columns (<%= columns.size %> of <%= Csr::Escalation::COLUMNS.size %>)</summary>
-    <%= form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "column-picker" do %>
-      <%= hidden_field_tag :search_type, search.search_type %>
-      <%= hidden_field_tag :value, search.value %>
-      <%= hidden_field_tag :region, search.region %>
-      <div class="choices">
-        <% Csr::Escalation::COLUMNS.each do |column, label| %>
-          <label>
-            <%= check_box_tag "columns[]", column, columns.include?(column), id: "column-#{column}" %>
-            <%= label %>
-          </label>
-        <% end %>
-      </div>
-      <%= submit_tag "Apply", name: nil, class: "button primary" %>
-    <% end %>
-  </details>
+  <%= render "column_picker", model: Csr::Escalation, columns: columns, param: :escalation_columns, search: search %>
 
   <table class="escalations">
     <thead>
       <tr>
         <% columns.each do |column| %>
-          <th class="<%= "num" if escalation_numeric_column?(column) %>"><%= Csr::Escalation::COLUMNS[column] %></th>
+          <th class="<%= "num" if Csr::Escalation.numeric_column?(column) %>"><%= Csr::Escalation::COLUMNS[column] %></th>
         <% end %>
         <th>Flags</th>
       </tr>
@@ -45,7 +26,7 @@
       <% escalations.each do |escalation| %>
         <tr class="<%= "miss" if escalation.line_down? %>">
           <% columns.each do |column| %>
-            <td class="<%= "num" if escalation_numeric_column?(column) %>"><%= escalation_cell(escalation, column) %></td>
+            <td class="<%= "num" if Csr::Escalation.numeric_column?(column) %>"><%= column_cell(escalation, column) %></td>
           <% end %>
           <td>
             <% if escalation.line_down? %><span class="pill late">Line down</span><% end %>

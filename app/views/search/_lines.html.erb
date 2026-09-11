@@ -1,5 +1,6 @@
-<%# locals: (lines:, summary:, search:) %>
-<%# The MPN column matters: with two keys in play, each line has to say which one it belongs to. %>
+<%# locals: (lines:, summary:, search:, columns:) %>
+<%# The default set answers "is this order going to land on time". Everything
+    tOSOR shows is one checkbox away — see _column_picker. %>
 <section class="panel">
   <header class="panel-head">
     <h2>Open orders <span class="count">(<%= number_with_delimiter lines.size %><%= " of #{number_with_delimiter summary[:open_lines]}" if lines.size < summary[:open_lines] %>)</span></h2>
@@ -10,24 +11,24 @@
       Export CSV
     <% end %>
   </header>
+
+  <%= render "column_picker", model: Csr::OsorLine, columns: columns, param: :line_columns, search: search %>
+
   <table class="lines">
     <thead>
       <tr>
-        <th>CPO</th><th>SO</th><th>PO</th><th>MPN</th><th class="num">Qty</th>
-        <th>Need (PDD)</th><th>ETD (CDD)</th><th>SO status</th><th>Risk</th>
+        <% columns.each do |column| %>
+          <th class="<%= "num" if Csr::OsorLine.numeric_column?(column) %>"><%= Csr::OsorLine::COLUMNS[column] %></th>
+        <% end %>
+        <th>Risk</th>
       </tr>
     </thead>
     <tbody>
       <% lines.each do |line| %>
         <tr class="<%= "miss" if line.miss %>">
-          <td><code><%= order_ref(line.cpo, line.cpo_pos) %></code></td>
-          <td><code><%= order_ref(line.so, line.so_pos) %></code></td>
-          <td><code><%= line.po || "—" %></code></td>
-          <td><code><%= line.mpn %></code></td>
-          <td class="num"><%= number_with_delimiter line.baan_ordered.to_i %></td>
-          <td><%= short_date(line.pdd) %></td>
-          <td><%= short_date(line.cdd) %></td>
-          <td><%= line.so_status %></td>
+          <% columns.each do |column| %>
+            <td class="<%= "num" if Csr::OsorLine.numeric_column?(column) %>"><%= column_cell(line, column) %></td>
+          <% end %>
           <td><%= risk_pill(line) %></td>
         </tr>
       <% end %>

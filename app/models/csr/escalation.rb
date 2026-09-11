@@ -6,6 +6,8 @@ module Csr
   # would be the Excel's mistake again. It keeps the normalized MPN and FPN it
   # was raised against, and the join happens at read time.
   class Escalation < ApplicationRecord
+    extend SelectableColumns
+
     belongs_to :snapshot, inverse_of: :escalations
 
     scope :in_snapshot, ->(snapshot) { where(snapshot: snapshot) }
@@ -44,13 +46,6 @@ module Csr
     }.freeze
 
     DEFAULT_COLUMNS = %i[escalation_number mpn escalation_type date_opened days_open shortage_qty owner_name].freeze
-
-    # Whatever the user asked for, kept to the columns that exist and to the
-    # order the table declares, so a hand-typed URL cannot reorder or inject.
-    def self.columns_for(requested)
-      chosen = COLUMNS.keys & Array(requested).map { |name| name.to_s.to_sym }
-      chosen.presence || DEFAULT_COLUMNS
-    end
 
     # The one severity flag CSR_FET actually carries. Priority (T0-T3) lives in
     # the escalation spreadsheet, not in this table.
