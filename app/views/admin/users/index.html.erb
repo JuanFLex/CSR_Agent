@@ -21,7 +21,7 @@
             <td><span class="pill <%= user.has_role?(:admin) ? "ok" : "unconfirmed" %>"><%= user.role %></span></td>
             <td class="num"><%= user.sign_in_count %></td>
             <td class="muted"><%= user.last_sign_in_at&.strftime("%Y-%m-%d %H:%M") || "never" %></td>
-            <td>
+            <td class="actions">
               <%= link_to "Edit", edit_admin_user_path(user), class: "button" %>
               <% unless user == current_user %>
                 <%= button_to "Delete", admin_user_path(user), method: :delete, class: "button",

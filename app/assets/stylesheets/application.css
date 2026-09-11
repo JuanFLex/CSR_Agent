@@ -73,6 +73,11 @@ code { font-family: var(--mono); font-size: 12px; }
 .hint, .warn { margin: 0; max-width: 640px; color: var(--muted); }
 .warn { color: var(--red-ink); }
 .panel > .hint { padding: 0 16px 16px; }
+.form-panel > .hint { padding: 0; }
+.form-panel a { color: var(--accent); }
+
+.page.stack { display: flex; flex-direction: column; gap: 18px; }
+td.actions { display: flex; gap: 8px; }
 
 .query { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .echo { margin: 0; font-size: 18px; }
