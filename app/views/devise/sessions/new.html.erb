@@ -1,0 +1,35 @@
+<main class="page auth">
+  <div class="panel form-panel">
+    <h1>CSR Supply Visibility</h1>
+    <p class="muted">Sign in with your Flex email.</p>
+
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+      <p>
+        <%= f.label :email %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+      </p>
+
+      <p>
+        <%= f.label :password %>
+        <%= f.password_field :password, autocomplete: "current-password" %>
+      </p>
+
+      <% if devise_mapping.rememberable? %>
+        <p class="remember">
+          <%= f.check_box :remember_me %>
+          <%= f.label :remember_me %>
+        </p>
+      <% end %>
+
+      <p><%= f.submit "Log in", class: "button primary" %></p>
+    <% end %>
+
+    <p class="hint">Use your Flex email. Your initial password is your email.</p>
+    <p class="hint">
+      Forgot your password?
+      <%= mail_to ENV.fetch("CSR_SUPPORT_MAILBOX", "CHANGE_ME@flex.com"), "Contact the team" %>
+    </p>
+  </div>
+</main>

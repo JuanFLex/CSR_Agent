@@ -1,0 +1,36 @@
+<main class="page">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Users <span class="count">(<%= @users.size %>)</span></h2>
+      <%= link_to "New user", new_admin_user_path, class: "button primary" %>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Role</th>
+          <th class="num">Sign-ins</th>
+          <th>Last sign-in</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= user.email %></td>
+            <td><span class="pill <%= user.has_role?(:admin) ? "ok" : "unconfirmed" %>"><%= user.role %></span></td>
+            <td class="num"><%= user.sign_in_count %></td>
+            <td class="muted"><%= user.last_sign_in_at&.strftime("%Y-%m-%d %H:%M") || "never" %></td>
+            <td>
+              <%= link_to "Edit", edit_admin_user_path(user), class: "button" %>
+              <% unless user == current_user %>
+                <%= button_to "Delete", admin_user_path(user), method: :delete, class: "button",
+                      form: { data: { turbo_confirm: "Delete #{user.email}?" } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</main>

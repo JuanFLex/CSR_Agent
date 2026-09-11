@@ -1,0 +1,9 @@
+admin:
+  email: admin@flex.com
+  encrypted_password: <%= Devise::Encryptor.digest(User, "password123") %>
+  roles: admin
+
+regular:
+  email: regular@flex.com
+  encrypted_password: <%= Devise::Encryptor.digest(User, "password123") %>
+  roles: user

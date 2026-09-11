@@ -32,6 +32,11 @@ gem "importmap-rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
 
+# Authentication (accounts created by an admin, no self-signup) and the
+# admin-only role check on top of it.
+gem "devise", "~> 4.9"
+gem "petergate", "~> 3.0"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
