@@ -9,15 +9,17 @@ subpath**, against the local **PostgreSQL 14** cluster.
 | Setting | Value |
 |---|---|
 | Subpath | `/csr/` |
-| Puma port | `3003` (DGS=3000, SmartQuote=3001, mice_consolidator=3002) |
+| Puma port | `3006` — taken: 3000 DGS, 3001 SmartQuote, 3002 mice_consolidator, 3003 snow_agents, 3004 dgs-uat, 3005 lockbox |
 | Code dir | `/railsapps/code/csr_agent` |
 | App databases | `csr_agent_production` + `csr_agent_production_queue` (role `csr_agent`) |
 | Reporting DB | SQL Server `SQLPR5256.flex.com:15001`, **read-only**, never migrated |
-| systemd units | `/etc/systemd/system/csr_agent.service` |
+| systemd unit | `/etc/systemd/system/csr_agent.service` (`User=infinex`, `Group=csg_bi`) |
 | nginx site | `/etc/nginx/sites-available/railsapps` |
 
-When in doubt about the Ruby version manager, the deploy user or the nginx
-proxy headers, **mirror `dgs.service` and the `/dgs/` nginx block**.
+When in doubt, mirror `dgs.service` and the `/dgs/` nginx block. The host's own
+documentation is `~/code/brain/03-Infra/k-lvl2393.md`, and the traps below were
+learned deploying Lockbox on 2026-09-03
+(`~/code/brain/05-Journal/2026-09-03-lockbox-despliegue-y-siete-bloqueantes.md`).
 
 ## 0. Blockers to clear first
 
@@ -51,10 +53,14 @@ There is no cache or cable database: Solid Cache and Solid Cable were removed.
 ## 2. Get the code
 
 ```bash
+bash                       # the login shell is ksh; without this there is no `bundle`
 cd /railsapps/code
 git clone <remote decided in step 0> csr_agent
 cd csr_agent
 ```
+
+asdf's global Ruby on this host is 3.3.3, but every app runs 3.3.0. Run Ruby
+commands from inside the checkout, where `.ruby-version` decides.
 
 ## 3. Gems
 
@@ -68,14 +74,20 @@ bundle install        # needs freetds-dev (step 0)
 Secrets stay out of the unit file — the unit files are world-readable:
 
 ```bash
-sudo install -m 600 /dev/null /etc/csr_agent.env
+sudo install -m 640 -o root -g csg_bi /dev/null /etc/csr_agent.env
 sudoedit /etc/csr_agent.env
 ```
+
+`640 root:csg_bi` follows `snow_agents.env`, so `infinex` can run
+`. /etc/csr_agent.env` without sudo — which the manual ingest in step 8 needs.
+The tradeoff is that any `csg_bi` member reads the SQL Server password; that
+login is read-only by design. Use `600 root:root` (the `lockbox.env` pattern)
+if that is not acceptable.
 
 ```ini
 # /etc/csr_agent.env
 RAILS_ENV=production
-PORT=3003
+PORT=3006
 RAILS_RELATIVE_URL_ROOT=/csr
 RAILS_MAX_THREADS=5
 RAILS_MASTER_KEY=CHANGE_ME
@@ -110,11 +122,17 @@ Wants=postgresql@14-main.service
 
 [Service]
 Type=simple
-User=<deploy_user>
+User=infinex
+Group=csg_bi
 WorkingDirectory=/railsapps/code/csr_agent
 EnvironmentFile=/etc/csr_agent.env
-# Match how dgs.service invokes bundler/ruby (rbenv/asdf/system path):
-ExecStart=/usr/bin/env bundle exec puma -C config/puma.rb
+# Not optional: systemd inherits nothing from the login shell, and without
+# these bundle exec fails with status=127 / "command not found: puma", even
+# though the same command works by hand.
+Environment=GEM_HOME=/export/home/infinex/.asdf/installs/ruby/3.3.0/lib/ruby/gems/3.3.0
+Environment=GEM_PATH=/export/home/infinex/.asdf/installs/ruby/3.3.0/lib/ruby/gems/3.3.0
+Environment=PATH=/export/home/infinex/.asdf/installs/ruby/3.3.0/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/export/home/infinex/.asdf/installs/ruby/3.3.0/bin/bundle exec puma -C config/puma.rb
 Restart=on-failure
 RestartSec=5
 
@@ -141,9 +159,13 @@ Nothing in `db:prepare` touches SQL Server: the `reporting` connection carries
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now csr_agent
+sleep 6                                   # Puma takes ~4s to bind; curl before that lies
 sudo systemctl status csr_agent
-sudo journalctl -u csr_agent -f
+sudo journalctl -u csr_agent -f           # wait for the "Listening on" line
 ```
+
+Puma binds `127.0.0.1` only (`config/puma.rb` uses `bind`, never `port`, which
+would open every interface and let anyone reach the app around nginx and TLS).
 
 ## 7. nginx subpath
 
@@ -152,7 +174,7 @@ mirroring `/dgs/`:
 
 ```nginx
 location /csr/ {
-    proxy_pass http://127.0.0.1:3003;          # no trailing slash: preserve the subpath
+    proxy_pass http://127.0.0.1:3006;          # no trailing slash: preserve the subpath
     proxy_set_header Host              $host;
     proxy_set_header X-Real-IP         $remote_addr;
     proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
@@ -188,6 +210,15 @@ DATABASES=("dgs_production" "excel_processor_production" "mice_consolidator_prod
 ```
 
 The queue database holds only job state and does not need backing up.
+
+That array has broken three times (a `_development` name, a dead CIFS mount, a
+stuck comma), and every time it was found by luck. Verify the edit, then verify
+the backup by content rather than by exit code:
+
+```bash
+sudo bash -c 'source <(grep "^DATABASES=" /usr/local/bin/backup_postgres.sh); printf "%s\n" "${DATABASES[@]}"' | cat -A
+sudo gunzip -t /mnt/postgresql_backup/csr_agent_production_*.backup.gz
+```
 
 ## 10. Verify
 
@@ -232,6 +263,9 @@ sudo systemctl restart csr_agent
 - **Assets are served by Puma** (propshaft); nginx only proxies. If they 404
   under `/csr/`, re-run `assets:precompile` with `RAILS_RELATIVE_URL_ROOT` set
   and restart.
+- **A separate pre-prod is a known pattern here.** `dgs-uat.service` runs on
+  3004 under `/dgs-uat` from its own checkout. If CSR ever needs the same, copy
+  that unit rather than inventing one.
 - **A load that shrinks by more than 30%** is parked instead of activated, and
   the previous snapshot keeps serving. Check `Csr::Snapshot.last.notes` when a
   load seems missing.
