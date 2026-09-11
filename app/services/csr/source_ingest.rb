@@ -13,7 +13,7 @@ module Csr
   class SourceIngest
     # A load that arrives more than this much smaller than the last good one
     # is treated as a truncated or partial export rather than as news.
-    DEFAULT_SHRINK_TOLERANCE = 0.30
+    SHRINK_TOLERANCE = 0.30
 
     INSERT_BATCH = 1_000
 
@@ -23,10 +23,9 @@ module Csr
       def failed?    = status == :failed
     end
 
-    def initialize(region: DEFAULT_REGION, force: false, shrink_tolerance: DEFAULT_SHRINK_TOLERANCE)
+    def initialize(region: DEFAULT_REGION, force: false)
       @region = region
       @force = force
-      @shrink_tolerance = shrink_tolerance
     end
 
     def call
@@ -40,8 +39,7 @@ module Csr
 
       snapshot = Snapshot.create!(
         region: @region, source_type: source_type, status: :loading,
-        source_file: staging.table_name, source_modified_at: watermark,
-        started_at: Time.current
+        source_file: staging.table_name, source_modified_at: watermark
       )
 
       load_rows(snapshot)
@@ -71,10 +69,10 @@ module Csr
 
       if previous&.row_count&.positive?
         shrink = 1.0 - (snapshot.row_count.to_f / previous.row_count)
-        if shrink > @shrink_tolerance
+        if shrink > SHRINK_TOLERANCE
           reason = format(
             "Row count fell %.1f%% (%d -> %d), beyond the %.0f%% tolerance; kept previous snapshot active",
-            shrink * 100, previous.row_count, snapshot.row_count, @shrink_tolerance * 100
+            shrink * 100, previous.row_count, snapshot.row_count, SHRINK_TOLERANCE * 100
           )
           snapshot.fail!(reason)
           return Result.new(status: :failed, snapshot: snapshot, message: reason)

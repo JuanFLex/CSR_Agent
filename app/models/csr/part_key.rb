@@ -26,8 +26,6 @@ module Csr
     # Applied identically to every source, because the Baan and Kinaxis exports
     # disagree about spacing often enough to break joins otherwise.
     def self.normalize(value)
-      return nil if value.nil?
-
       value.to_s.gsub(/[[:cntrl:]]/, "").strip.squeeze(" ").presence
     end
 
