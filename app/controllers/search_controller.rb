@@ -21,7 +21,7 @@ class SearchController < ApplicationController
 
     respond_to do |format|
       format.html { load_results unless @search.blank? }
-      format.csv  { send_data lines_csv, filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv" }
+      format.csv  { export_csv }
     end
   end
 
@@ -35,11 +35,32 @@ class SearchController < ApplicationController
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
     @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
+    log_search("search")
+  end
+
+  def export_csv
+    send_data lines_csv, filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv"
+    log_search("export")
+  end
+
+  # The unit of usage this app reports on is a search, not a page view: one
+  # row per non-blank HTML search and one per CSV export. Logging must never
+  # break the search it is logging, so a failure here only ever costs the
+  # usage report a row, not the response.
+  def log_search(kind)
+    return if @search.blank?
+
+    Csr::SearchLog.create!(
+      user: current_user, kind: kind, search_type: @search.search_type,
+      value: @search.value, keys_found: @search.summary[:combos_found]
+    )
+  rescue StandardError => e
+    Rails.logger.error("[SearchLog] #{e.message}")
   end
 
   # Which columns a table shows. The choice travels in the URL so a search can
   # be shared with it, and is remembered in a cookie so the next visit keeps
-  # it. There is no login yet, so the browser is the user.
+  # it — per browser, same as before login existed.
   def chosen_columns(model, param)
     requested = params[param] || cookies[param]&.split(",")
     chosen = model.columns_for(requested)

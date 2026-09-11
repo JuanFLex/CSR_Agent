@@ -12,4 +12,5 @@ class User < ApplicationRecord
   devise :database_authenticatable, :rememberable, :validatable, :trackable
 
   has_many :user_sessions, dependent: :destroy
+  has_many :search_logs, class_name: "Csr::SearchLog", dependent: :destroy
 end

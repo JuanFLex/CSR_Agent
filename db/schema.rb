@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_170100) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -139,6 +139,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_170100) do
     t.index ["region", "key_value"], name: "index_csr_part_keys_on_region_and_key_value", unique: true
   end
 
+  create_table "csr_search_logs", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", null: false
+    t.string "search_type"
+    t.string "value"
+    t.integer "keys_found"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "created_at"], name: "index_csr_search_logs_on_user_id_and_created_at"
+  end
+
   create_table "csr_snapshots", force: :cascade do |t|
     t.string "region", default: "Americas", null: false
     t.string "source_type", null: false
@@ -186,5 +197,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_170100) do
   add_foreign_key "csr_escalations", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_osor_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_osor_lines", "csr_snapshots", column: "snapshot_id"
+  add_foreign_key "csr_search_logs", "users"
   add_foreign_key "user_sessions", "users"
 end
