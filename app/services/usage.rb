@@ -19,9 +19,4 @@ module Usage
   def self.report(since: nil)
     Report.new(since: since.presence || config.since)
   end
-
-  # For tests that need a different cutoff.
-  def self.reset!
-    @config = nil
-  end
 end

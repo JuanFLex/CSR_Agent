@@ -4,12 +4,8 @@ require "csv"
 # picture back. Results render inside a Turbo Frame so a search does not reload
 # the page around it. The same action answers .csv with every open line.
 class SearchController < ApplicationController
-  # Any signed-in user (petergate's implicit :user role, which every account
-  # carries whether or not it also carries :admin). Looked up in snow_agents
-  # rather than guessed: its own non-admin controllers call `access` on
-  # nothing at all and rely solely on authenticate_user!, since PeterGate's
-  # check is opt-in — an uncalled `access` denies nothing. Declaring it here
-  # anyway makes the intent explicit rather than relying on an absence.
+  # Any signed-in user. PeterGate denies nothing without an `access` call; this
+  # states the intent instead of relying on that.
   access user: :all
 
   CSV_COLUMNS = %i[

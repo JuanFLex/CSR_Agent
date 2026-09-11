@@ -43,7 +43,7 @@ module Usage
       SQL
     end
 
-    # No pagination (nothing in the app needs it yet): the cutoff is the only limit.
+    # ponytail: top 50, paginate when there are more users than that.
     def by_user(limit: 50)
       query(<<~SQL, limit: limit)
         SELECT u.email,
