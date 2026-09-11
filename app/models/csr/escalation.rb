@@ -13,7 +13,44 @@ module Csr
     # Every escalation raised against the MPN of any of these keys.
     scope :for_keys, ->(keys) { where(mpn: PartKey.where(id: keys).select(:mpn)) }
 
-    def open? = escalation_status.to_s.casecmp("closed") != 0
+    # Every column the escalations panel can show, in display order, and the
+    # subset it shows until the user says otherwise. The flags column
+    # (line down, allocation) is not here: it is severity, always on.
+    COLUMNS = {
+      escalation_number:  "FET #",
+      mpn:                "MPN",
+      fpn:                "FPN",
+      escalation_type:    "Type",
+      escalation_status:  "Status",
+      date_opened:        "Opened",
+      days_open:          "Days open",
+      shortage_qty:       "Shortage",
+      owner_name:         "Owner",
+      owner_role:         "Owner role",
+      owner_email:        "Owner email",
+      age_current_owner:  "Days with owner",
+      customer:           "Customer",
+      manufacturer:       "Manufacturer",
+      supplier:           "Supplier",
+      description:        "Description",
+      facility:           "Facility",
+      region_code:        "Region",
+      escalation_group:   "Group",
+      reason_code:        "Reason",
+      site_revenue_impact: "Revenue impact",
+      impact_date:        "Impact date",
+      updated_date:       "Updated",
+      last_action_comments: "Last action"
+    }.freeze
+
+    DEFAULT_COLUMNS = %i[escalation_number mpn escalation_type date_opened days_open shortage_qty owner_name].freeze
+
+    # Whatever the user asked for, kept to the columns that exist and to the
+    # order the table declares, so a hand-typed URL cannot reorder or inject.
+    def self.columns_for(requested)
+      chosen = COLUMNS.keys & Array(requested).map { |name| name.to_s.to_sym }
+      chosen.presence || DEFAULT_COLUMNS
+    end
 
     # The one severity flag CSR_FET actually carries. Priority (T0-T3) lives in
     # the escalation spreadsheet, not in this table.

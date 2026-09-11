@@ -7,6 +7,27 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
+  # Part handles read as codes, not prose.
+  ESCALATION_MONO_COLUMNS = %i[escalation_number mpn fpn].freeze
+
+  def escalation_numeric_column?(column)
+    Csr::Escalation.type_for_attribute(column).type.in?(%i[integer decimal])
+  end
+
+  # One escalation cell, formatted by what the value is rather than by a list
+  # that would have to be kept in step with the column set.
+  def escalation_cell(escalation, column)
+    value = escalation.public_send(column)
+
+    case value
+    when nil                 then "—"
+    when Time, Date          then short_date(value)
+    when Numeric             then number_with_delimiter(value.to_i)
+    else
+      ESCALATION_MONO_COLUMNS.include?(column) ? tag.code(value) : value.to_s
+    end
+  end
+
   # Month and day, plus the year when it is not this one, so a past-due or
   # next-year line cannot pass for this year's.
   def short_date(time)

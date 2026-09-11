@@ -112,6 +112,12 @@ td.multi { background: var(--amber-bg); }
 table.keys td:first-child { white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px; background: var(--amber); color: #fff; font-size: 11px; font-weight: 700; }
 
+.columns { border-bottom: 1px solid var(--line); font-size: 13px; }
+.columns summary { padding: 0 16px 12px; color: var(--accent); cursor: pointer; }
+.columns .column-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 0 16px 14px; }
+.columns .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 16px; width: 100%; }
+.columns label { display: flex; align-items: center; gap: 6px; }
+
 table.escalations td:first-child, table.escalations td:nth-child(2) { white-space: nowrap; }
 .multi-hint .pill { margin-right: 2px; }
 

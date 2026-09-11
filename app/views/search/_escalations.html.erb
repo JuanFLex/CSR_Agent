@@ -1,4 +1,4 @@
-<%# locals: (escalations:) %>
+<%# locals: (escalations:, columns:, search:) %>
 <%# Escalations attach by MPN, not by the CPN|MPN key: a FET carries no CPN, so
     one escalation can belong to several keys. It is listed against the MPN it
     was raised on, and never folded into the risk card — the Excel's rule for
@@ -10,23 +10,43 @@
       <span class="multi-hint"><span class="pill late">Line down</span><%= pluralize(down, "escalation") %></span>
     <% end %>
   </header>
+
+  <%# CSR_FET carries far more than a table can show at once, and which columns
+      matter depends on who is reading. The choice rides in the URL, so a search
+      can be shared with it, and sticks in a cookie for the next visit. %>
+  <details class="columns">
+    <summary>Columns (<%= columns.size %> of <%= Csr::Escalation::COLUMNS.size %>)</summary>
+    <%= form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "column-picker" do %>
+      <%= hidden_field_tag :search_type, search.search_type %>
+      <%= hidden_field_tag :value, search.value %>
+      <%= hidden_field_tag :region, search.region %>
+      <div class="choices">
+        <% Csr::Escalation::COLUMNS.each do |column, label| %>
+          <label>
+            <%= check_box_tag "columns[]", column, columns.include?(column), id: "column-#{column}" %>
+            <%= label %>
+          </label>
+        <% end %>
+      </div>
+      <%= submit_tag "Apply", name: nil, class: "button primary" %>
+    <% end %>
+  </details>
+
   <table class="escalations">
     <thead>
       <tr>
-        <th>FET #</th><th>MPN</th><th>Type</th><th>Opened</th><th class="num">Days open</th>
-        <th class="num">Shortage</th><th>Owner</th><th>Flags</th>
+        <% columns.each do |column| %>
+          <th class="<%= "num" if escalation_numeric_column?(column) %>"><%= Csr::Escalation::COLUMNS[column] %></th>
+        <% end %>
+        <th>Flags</th>
       </tr>
     </thead>
     <tbody>
       <% escalations.each do |escalation| %>
         <tr class="<%= "miss" if escalation.line_down? %>">
-          <td><code><%= escalation.escalation_number %></code></td>
-          <td><code><%= escalation.mpn %></code></td>
-          <td><%= escalation.escalation_type.to_s.titleize %></td>
-          <td><%= short_date(escalation.date_opened) %></td>
-          <td class="num"><%= escalation.days_open %></td>
-          <td class="num"><%= number_with_delimiter escalation.shortage_qty.to_i %></td>
-          <td><%= escalation.owner_name %></td>
+          <% columns.each do |column| %>
+            <td class="<%= "num" if escalation_numeric_column?(column) %>"><%= escalation_cell(escalation, column) %></td>
+          <% end %>
           <td>
             <% if escalation.line_down? %><span class="pill late">Line down</span><% end %>
             <% if escalation.item_on_allocation == "Y" %><span class="pill unconfirmed">Allocation</span><% end %>

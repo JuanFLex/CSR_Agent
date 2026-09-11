@@ -41,6 +41,25 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select ".narrative li", text: /2 open escalations on these MPNs, 1 with the line down/
   end
 
+  test "shows the default escalation columns and swaps them for the chosen ones" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select "table.escalations thead th", text: "FET #"
+    assert_select "table.escalations thead th", text: "Customer", count: 0
+
+    get root_url, params: { search_type: "cpn", value: "CPN-100", columns: %w[mpn customer nonsense] }
+
+    assert_select "table.escalations thead th", text: "Customer"
+    assert_select "table.escalations thead th", text: "FET #", count: 0
+    assert_equal "mpn,customer", cookies[:escalation_columns], "the choice is remembered per browser"
+  end
+
+  test "falls back to the default columns when the request names none that exist" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100", columns: %w[drop_table] }
+
+    assert_select "table.escalations thead th", text: "FET #"
+  end
+
   test "exports every open line of the search as CSV" do
     get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100" }
 
