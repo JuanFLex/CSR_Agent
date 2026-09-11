@@ -23,10 +23,13 @@ learned deploying Lockbox on 2026-09-03
 
 ## 0. Blockers to clear first
 
-1. **No git remote.** `git remote -v` is empty, so the server has nothing to
-   clone. Either push to a private repo (the way mice_consolidator uses
-   `github.com/JuanFLex/mice-project.git`) or rsync the working tree. Decide
-   before step 2.
+1. **Server access to the repo.** The code lives at
+   `git@github.com:JuanFLex/CSR_Agent.git` (private). The server needs read
+   access of its own: add a **read-only deploy key** for this repo, or reuse
+   whatever the existing checkouts authenticate with —
+   `git -C /railsapps/code/dgs remote -v` and
+   `git -C /railsapps/code/mice_consolidator remote -v` say which it is. Do not
+   put a personal credential on the host.
 2. **FreeTDS.** The `tiny_tds` gem needs it to build and to run; without it
    `bundle install` fails and the reporting connection cannot open:
    `sudo apt-get install -y freetds-dev freetds-bin`.
@@ -55,7 +58,7 @@ There is no cache or cable database: Solid Cache and Solid Cable were removed.
 ```bash
 bash                       # the login shell is ksh; without this there is no `bundle`
 cd /railsapps/code
-git clone <remote decided in step 0> csr_agent
+git clone git@github.com:JuanFLex/CSR_Agent.git csr_agent
 cd csr_agent
 ```
 
@@ -257,6 +260,9 @@ sudo systemctl restart csr_agent
 - **The app never writes to SQL Server.** `Reporting::Base` refuses writes and
   the connection is meant to carry a `db_datareader` login. Verify the login
   with `script/sql/verify_reporting_access.sql` before pointing UAT at it.
+- **`config/master.key` is not in the repo** (gitignored, and it never was
+  committed). Copy it to the server by hand or pass `RAILS_MASTER_KEY` in the
+  env file, or the app cannot read its credentials.
 - **Always use the FQDN** — the TLS cert covers `k-lvl2393.k-l.flex.com` only.
 - **Subpath breaks hardcoded `/` URLs.** Use path helpers; the CSV export link
   and the column pickers already do.
