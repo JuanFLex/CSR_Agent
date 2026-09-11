@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,10 +47,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
     t.text "last_action_comments"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["snapshot_id", "escalation_number"], name: "index_csr_escalations_on_snapshot_id_and_escalation_number"
-    t.index ["snapshot_id", "fpn"], name: "index_csr_escalations_on_snapshot_id_and_fpn"
     t.index ["snapshot_id", "mpn"], name: "index_csr_escalations_on_snapshot_id_and_mpn"
-    t.index ["snapshot_id"], name: "index_csr_escalations_on_snapshot_id"
   end
 
   create_table "csr_osor_lines", force: :cascade do |t|
@@ -123,14 +120,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
     t.decimal "so_ppv_price", precision: 18, scale: 6
     t.decimal "so_ppv_total", precision: 18, scale: 4
     t.index ["part_key_id"], name: "index_csr_osor_lines_on_part_key_id"
-    t.index ["snapshot_id", "cpn"], name: "index_csr_osor_lines_on_snapshot_id_and_cpn"
     t.index ["snapshot_id", "cpo"], name: "index_csr_osor_lines_on_snapshot_id_and_cpo"
     t.index ["snapshot_id", "fpn"], name: "index_csr_osor_lines_on_snapshot_id_and_fpn"
     t.index ["snapshot_id", "miss"], name: "index_csr_osor_lines_on_snapshot_id_and_miss"
-    t.index ["snapshot_id", "mpn"], name: "index_csr_osor_lines_on_snapshot_id_and_mpn"
     t.index ["snapshot_id", "part_key_id"], name: "index_csr_osor_lines_on_snapshot_id_and_part_key_id"
     t.index ["snapshot_id", "so"], name: "index_csr_osor_lines_on_snapshot_id_and_so"
-    t.index ["snapshot_id"], name: "index_csr_osor_lines_on_snapshot_id"
   end
 
   create_table "csr_part_keys", force: :cascade do |t|
@@ -150,9 +144,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
     t.string "source_type", null: false
     t.string "status", default: "loading", null: false
     t.string "source_file"
-    t.string "week_label"
     t.datetime "source_modified_at"
-    t.datetime "started_at"
     t.datetime "activated_at"
     t.integer "row_count", default: 0, null: false
     t.integer "rejected_count", default: 0, null: false

@@ -42,15 +42,7 @@ module Csr
     end
 
     def to_decimal(value)
-      return value if value.is_a?(BigDecimal)
-      return BigDecimal(value.to_s) if value.is_a?(Numeric)
-
-      text = value.to_s.strip.delete(",")
-      return nil if text.empty?
-
-      BigDecimal(text)
-    rescue ArgumentError
-      nil
+      BigDecimal(value.to_s.strip.delete(","), exception: false)
     end
 
     def to_time(value)
