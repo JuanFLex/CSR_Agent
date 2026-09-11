@@ -22,6 +22,13 @@ production:
     class: Csr::OsorIngestJob
     schedule: every 15 minutes
 
+  # The escalation ETL runs every 3 hours. Polling hourly picks a load up
+  # within the hour of landing instead of waiting on a fixed 3-hour slot, and
+  # a poll that finds nothing costs two aggregates over CSR_FET.
+  fet_ingest:
+    class: Csr::FetIngestJob
+    schedule: every hour
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

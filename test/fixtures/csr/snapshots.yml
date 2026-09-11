@@ -24,3 +24,12 @@ europe:
   source_modified_at: 2026-09-07 16:00:00
   activated_at: 2026-09-07 16:01:00
   row_count: 1
+
+fet:
+  region: Americas
+  source_type: escalation
+  status: active
+  source_file: CSR_FET
+  source_modified_at: 2026-09-10 00:00:00
+  activated_at: 2026-09-10 01:00:00
+  row_count: 2

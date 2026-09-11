@@ -7,6 +7,27 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
+  # Part numbers, order numbers and references read as codes, not prose.
+  MONO_COLUMNS = %i[
+    escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
+  ].freeze
+
+  # One table cell, formatted by what the value is rather than by a list that
+  # would have to be kept in step with the column set.
+  def column_cell(record, column)
+    value = record.public_send(column)
+
+    case value
+    when nil                 then "—"
+    when Time, Date          then short_date(value)
+    # Quantities are whole; prices are not. Truncating both to an integer is
+    # how a 0.44 unit price reads as zero.
+    when Numeric             then number_with_precision(value, precision: 4, delimiter: ",", strip_insignificant_zeros: true)
+    else
+      MONO_COLUMNS.include?(column) ? tag.code(value) : value.to_s
+    end
+  end
+
   # Month and day, plus the year when it is not this one, so a past-due or
   # next-year line cannot pass for this year's.
   def short_date(time)
@@ -63,6 +84,14 @@ module SearchHelper
 
     if summary[:unconfirmed].positive?
       points << "#{pluralize(summary[:unconfirmed], "line")} with no committed date yet."
+    end
+
+    if (escalations = search.escalations).any?
+      down = escalations.count(&:line_down?)
+      points << safe_join([
+        tag.strong(pluralize(escalations.size, "open escalation")), " on these MPNs",
+        down.positive? ? safe_join([ ", ", tag.strong("#{down} with the line down", class: "bad") ]) : "", "."
+      ])
     end
 
     spanning = context.count { |_id, ctx| spans_many?(ctx) }

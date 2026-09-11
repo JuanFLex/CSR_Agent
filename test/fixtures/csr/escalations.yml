@@ -1,0 +1,27 @@
+shortage:
+  snapshot: fet
+  escalation_number: "20250716610058.2"
+  escalation_type: SHORTAGE ESCALATION
+  escalation_status: OPEN
+  mpn: MPN-A
+  fpn: FCS-CPN-100
+  date_opened: 2026-08-01 00:00:00
+  updated_date: 2026-09-10 00:00:00
+  days_open: 40
+  shortage_qty: 1500
+  owner_name: A. Buyer
+  line_down: "Y"
+
+return_excess:
+  snapshot: fet
+  escalation_number: "20250716610059.1"
+  escalation_type: RETURN EXCESS ESCALATION
+  escalation_status: OPEN
+  mpn: MPN-B
+  fpn: FCS-CPN-100
+  date_opened: 2026-07-15 00:00:00
+  updated_date: 2026-09-10 00:00:00
+  days_open: 57
+  shortage_qty: 0
+  owner_name: B. Planner
+  line_down: "N"

@@ -70,7 +70,7 @@ code { font-family: var(--mono); font-size: 12px; }
 .card { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .card .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .card .value { display: flex; align-items: center; gap: 10px; font-size: 34px; font-weight: 700; line-height: 1.1; }
-.card .value.range { gap: 8px; font-size: 24px; line-height: 1.45; }
+.card .value.range { flex-wrap: wrap; gap: 4px 8px; font-size: 21px; line-height: 1.35; }
 .card .value .arrow { color: #9aa6b5; font-weight: 400; }
 .card .note { color: var(--muted); font-size: 13px; }
 .card.risk { border: 0; color: #fff; }
@@ -111,6 +111,15 @@ tr.miss td:first-child { box-shadow: inset 3px 0 0 var(--red); }
 td.multi { background: var(--amber-bg); }
 table.keys td:first-child { white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px; background: var(--amber); color: #fff; font-size: 11px; font-weight: 700; }
+
+.columns { border-bottom: 1px solid var(--line); font-size: 13px; }
+.columns summary { padding: 0 16px 12px; color: var(--accent); cursor: pointer; }
+.columns .column-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 0 16px 14px; }
+.columns .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 16px; width: 100%; }
+.columns label { display: flex; align-items: center; gap: 6px; }
+
+table.escalations td:first-child, table.escalations td:nth-child(2) { white-space: nowrap; }
+.multi-hint .pill { margin-right: 2px; }
 
 .pill { display: inline-flex; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .pill.late { background: var(--red-bg); color: var(--red-ink); }

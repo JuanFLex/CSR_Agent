@@ -24,6 +24,19 @@ class SearchController < ApplicationController
     @keys = @search.part_keys.order(:key_value).to_a
     @context = @search.context
     @lines = @search.lines.to_a
+    @escalations = @search.escalations.to_a
+    @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
+    @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
+  end
+
+  # Which columns a table shows. The choice travels in the URL so a search can
+  # be shared with it, and is remembered in a cookie so the next visit keeps
+  # it. There is no login yet, so the browser is the user.
+  def chosen_columns(model, param)
+    requested = params[param] || cookies[param]&.split(",")
+    chosen = model.columns_for(requested)
+    cookies.permanent[param] = chosen.join(",") if params[param]
+    chosen
   end
 
   def lines_csv
