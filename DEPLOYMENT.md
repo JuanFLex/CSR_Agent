@@ -23,17 +23,10 @@ learned deploying Lockbox on 2026-09-03
 
 ## 0. Blockers to clear first
 
-1. **Server access to the repo.** The code lives at
-   `git@github.com:JuanFLex/CSR_Agent.git` (private). The server needs read
-   access of its own: add a **read-only deploy key** for this repo, or reuse
-   whatever the existing checkouts authenticate with —
-   `git -C /railsapps/code/dgs remote -v` and
-   `git -C /railsapps/code/mice_consolidator remote -v` say which it is. Do not
-   put a personal credential on the host.
-2. **FreeTDS.** The `tiny_tds` gem needs it to build and to run; without it
+1. **FreeTDS.** The `tiny_tds` gem needs it to build and to run; without it
    `bundle install` fails and the reporting connection cannot open:
    `sudo apt-get install -y freetds-dev freetds-bin`.
-3. **No authentication.** This app has no login: whoever reaches the subpath
+2. **No authentication.** This app has no login: whoever reaches the subpath
    sees every customer, part and order. That is fine for a UAT behind the
    internal network; it is a decision to make consciously before the link is
    shared.
