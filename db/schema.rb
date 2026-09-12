@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_160000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -139,6 +139,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_160000) do
     t.index ["region", "key_value"], name: "index_csr_part_keys_on_region_and_key_value", unique: true
   end
 
+  create_table "csr_search_logs", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", null: false
+    t.string "search_type"
+    t.string "value"
+    t.integer "keys_found"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "created_at"], name: "index_csr_search_logs_on_user_id_and_created_at"
+  end
+
   create_table "csr_snapshots", force: :cascade do |t|
     t.string "region", default: "Americas", null: false
     t.string "source_type", null: false
@@ -155,7 +166,37 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_160000) do
     t.index ["source_type", "source_modified_at"], name: "index_csr_snapshots_on_source_type_and_source_modified_at"
   end
 
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.datetime "started_at", null: false
+    t.datetime "ended_at"
+    t.integer "duration_seconds"
+    t.string "sign_out_reason"
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "remember_created_at"
+    t.integer "sign_in_count", default: 0, null: false
+    t.datetime "current_sign_in_at"
+    t.datetime "last_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.string "last_sign_in_ip"
+    t.string "roles"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
   add_foreign_key "csr_escalations", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_osor_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_osor_lines", "csr_snapshots", column: "snapshot_id"
+  add_foreign_key "csr_search_logs", "users"
+  add_foreign_key "user_sessions", "users"
 end

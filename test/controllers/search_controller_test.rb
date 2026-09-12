@@ -1,6 +1,8 @@
 require "test_helper"
 
 class SearchControllerTest < ActionDispatch::IntegrationTest
+  setup { sign_in users(:regular) }
+
   test "displays the requested region" do
     get root_url, params: { region: "Europe" }
 

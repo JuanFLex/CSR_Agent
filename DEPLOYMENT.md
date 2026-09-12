@@ -26,10 +26,10 @@ learned deploying Lockbox on 2026-09-03
 1. **FreeTDS.** The `tiny_tds` gem needs it to build and to run; without it
    `bundle install` fails and the reporting connection cannot open:
    `sudo apt-get install -y freetds-dev freetds-bin`.
-2. **No authentication.** This app has no login: whoever reaches the subpath
-   sees every customer, part and order. That is fine for a UAT behind the
-   internal network; it is a decision to make consciously before the link is
-   shared.
+2. ~~No authentication.~~ **Resolved.** Devise + PeterGate gate every page
+   behind sign-in; there is no self-signup, so accounts are created by an
+   admin (see "First admin" below). A non-admin cannot reach `/admin/users`
+   or `/admin/usage`.
 
 ## 1. PostgreSQL role + databases
 
@@ -87,6 +87,10 @@ PORT=3006
 RAILS_RELATIVE_URL_ROOT=/csr
 RAILS_MAX_THREADS=5
 RAILS_MASTER_KEY=CHANGE_ME
+
+# Shown on the sign-in page in place of a password-reset link (there is no
+# self-service reset — see "First admin" below).
+CSR_SUPPORT_MAILBOX=CHANGE_ME@flex.com
 
 # Postgres — everything this app writes
 CSR_APP_DB_HOST=localhost
@@ -149,6 +153,16 @@ RAILS_RELATIVE_URL_ROOT=/csr \
 
 Nothing in `db:prepare` touches SQL Server: the `reporting` connection carries
 `database_tasks: false`, so Rails schema tasks cannot see it.
+
+## 5a. First admin
+
+There is no self-signup — every account, including the first, is created by
+hand. Username is the Flex email; password defaults to that same email
+(an admin can change it from `/admin/users` later):
+
+```bash
+bundle exec rails runner 'User.create!(email: "x@flex.com", password: "x@flex.com", roles: :admin)'
+```
 
 ## 6. Start
 
@@ -219,7 +233,8 @@ sudo gunzip -t /mnt/postgresql_backup/csr_agent_production_*.backup.gz
 ## 10. Verify
 
 ```bash
-curl -sI https://k-lvl2393.k-l.flex.com/csr/        # 200, via FQDN (the cert covers it only)
+curl -sI https://k-lvl2393.k-l.flex.com/csr/        # 302 to sign-in now that auth is on
+curl -sI https://k-lvl2393.k-l.flex.com/csr/up       # 200, always public — use this for health checks
 ```
 
 Then search `STL135N8F7AG` (red, with a line-down escalation) and
@@ -268,3 +283,6 @@ sudo systemctl restart csr_agent
 - **A load that shrinks by more than 30%** is parked instead of activated, and
   the previous snapshot keeps serving. Check `Csr::Snapshot.last.notes` when a
   load seems missing.
+- **`/csr/` now answers 302, not 200.** Every page redirects to sign-in when
+  unauthenticated. Point host health checks (`verify-k-lvl2393.sh`) at
+  `/csr/up`, which stays public, not at the root.
