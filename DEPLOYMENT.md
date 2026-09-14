@@ -216,7 +216,7 @@ Add the app database to the cron backup array in
 `/usr/local/bin/backup_postgres.sh`:
 
 ```bash
-DATABASES=("dgs_production" "excel_processor_production" "mice_consolidator_production" "csr_agent_production")
+DATABASES=("dgs_production" "excel_processor_production" "mice_consolidator_production" "snow_agents_production" "lockbox_production" "csr_agent_production")
 ```
 
 The queue database holds only job state and does not need backing up.
