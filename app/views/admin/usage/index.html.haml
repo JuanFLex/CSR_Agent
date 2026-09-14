@@ -1,0 +1,105 @@
+%main.page.stack
+  .query
+    %p.echo
+      %span.muted Usage since
+      %code= @since
+      - if @summary["last_use"].present?
+        %span.muted= "· last use #{@summary["last_use"].to_time.strftime("%b %d, %Y")}"
+    .since-links
+      - [ [ "Since #{Usage::DEFAULT_SINCE}", Usage::DEFAULT_SINCE ],
+          [ "Last 90 days", 90.days.ago.to_date.to_s ],
+          [ "All", "2000-01-01" ] ].each do |label, value|
+        = link_to label, admin_usage_path(since: value), class: "button#{" active" if @since == value}"
+
+  .cards
+    .card
+      %span.label Registered users
+      %span.value= @summary["registered"]
+    .card
+      %span.label Users who searched
+      %span.value= @summary["searched"]
+      %span.note= "of #{@summary["registered"]} accounts"
+    .card
+      %span.label Searches
+      %span.value= @summary["searches"]
+    .card
+      %span.label Exports
+      %span.value= @summary["exports"]
+
+  .split
+    .panel
+      .panel-head
+        %h2 Searches per week
+      - if @by_week.empty?
+        %p.hint No activity in this period.
+      - else
+        - max_searches = [ @by_week.map { |row| row["searches"].to_i }.max, 1 ].max
+        .bars
+          - @by_week.each do |row|
+            .bar-col
+              .bar{ style: "height: #{(row["searches"].to_i * 100.0 / max_searches).round(1)}%",
+                    title: "#{row["week"]}: #{row["searches"]} searches, #{row["users"]} users" }
+              %span.bar-label= row["week"]
+
+    .card
+      %span.label No-results rate
+      %span.value= "#{@no_results_rate}%"
+      %span.note of searches found zero part keys
+
+  .split
+    .panel
+      .panel-head
+        %h2
+          Who uses it
+          %span.count= "(#{@by_user.size})"
+      %table
+        %thead
+          %tr
+            %th Email
+            %th.num Searches
+            %th.num Exports
+            %th Last search
+        %tbody
+          - @by_user.each do |row|
+            %tr
+              %td= row["email"]
+              %td.num= row["searches"]
+              %td.num= row["exports"]
+              %td.muted= row["last_search"]&.to_time&.strftime("%Y-%m-%d %H:%M")
+
+    .panel
+      .panel-head
+        %h2 Search types
+      %table
+        %thead
+          %tr
+            %th Type
+            %th.num Searches
+            %th.num Users
+        %tbody
+          - @by_search_type.each do |row|
+            %tr
+              %td= row["search_type"]
+              %td.num= row["searches"]
+              %td.num= row["users"]
+
+  .panel
+    .panel-head
+      %h2
+        Never searched
+        %span.count= "(#{@never_searched.size})"
+    - if @never_searched.any?
+      %table
+        %thead
+          %tr
+            %th Email
+            %th.num Sign-ins
+            %th Last sign-in
+        %tbody
+          - @never_searched.each do |row|
+            %tr
+              %td= row["email"]
+              %td.num= row["sign_in_count"]
+              %td.muted= row["last_sign_in_at"]&.to_time&.strftime("%Y-%m-%d %H:%M") || "never"
+    - else
+      %p.hint Every account has searched at least once.

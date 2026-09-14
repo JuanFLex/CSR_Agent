@@ -1,0 +1,33 @@
+-# locals: (escalations:, columns:, search:)
+-# Escalations attach by MPN, not by the CPN|MPN key: a FET carries no CPN, so
+-# one escalation can belong to several keys. It is listed against the MPN it
+-# was raised on, and never folded into the risk card — the Excel's rule for
+-# that ("Priority contains RED") has no column behind it.
+%section.panel
+  %header.panel-head
+    %h2
+      Escalations (FET)
+      %span.count= "(#{escalations.size})"
+    - if (down = escalations.count(&:line_down?)).positive?
+      %span.multi-hint
+        %span.pill.late>Line down
+        = pluralize(down, "escalation")
+
+  = render "column_picker", model: Csr::Escalation, columns: columns, param: :escalation_columns, search: search
+
+  %table.escalations
+    %thead
+      %tr
+        - columns.each do |column|
+          %th{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= Csr::Escalation::COLUMNS[column]
+        %th Flags
+    %tbody
+      - escalations.each do |escalation|
+        %tr{ class: ("miss" if escalation.line_down?) }
+          - columns.each do |column|
+            %td{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= column_cell(escalation, column)
+          %td
+            - if escalation.line_down?
+              %span.pill.late Line down
+            - if escalation.item_on_allocation == "Y"
+              %span.pill.unconfirmed Allocation

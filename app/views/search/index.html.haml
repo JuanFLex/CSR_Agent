@@ -1,0 +1,24 @@
+%main.page
+  = turbo_frame_tag "results" do
+    - if @search.blank?
+      %p.hint Search by CPN, MPN, CPO+Line, SO or FPN. A CPN carrying several MPNs returns one row per combination.
+    - elsif @search.snapshot.nil?
+      %p.warn No OSOR snapshot is active yet. Run the ingest before searching.
+    - else
+      .query
+        %p.echo
+          %span.muted= @search.label
+          %code= @search.value
+          %span.muted= "· #{pluralize(@summary[:combos_found], "part key")}"
+        = render "sources", sources: @search.sources
+
+      - if @summary[:combos_found].zero?
+        %p.warn= safe_join([ "No results for ", tag.strong(@search.label), " = ", tag.code(@search.value), "." ])
+      - else
+        = render "summary", summary: @summary
+        .split
+          = render "keys", keys: @keys, context: @context
+          = render "narrative", search: @search, summary: @summary, context: @context
+        - if @escalations.any?
+          = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
+        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns

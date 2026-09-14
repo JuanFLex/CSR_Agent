@@ -1,0 +1,27 @@
+%main.page.auth
+  .panel.form-panel
+    %h1 CSR Supply Visibility
+    %p.muted Sign in with your Flex email.
+
+    = render "devise/shared/error_messages", resource: resource
+
+    = form_for(resource, as: resource_name, url: session_path(resource_name)) do |f|
+      %p
+        = f.label :email
+        = f.email_field :email, autofocus: true, autocomplete: "email"
+
+      %p
+        = f.label :password
+        = f.password_field :password, autocomplete: "current-password"
+
+      - if devise_mapping.rememberable?
+        %p.remember
+          = f.check_box :remember_me
+          = f.label :remember_me
+
+      %p= f.submit "Log in", class: "button primary"
+
+    %p.hint Use your Flex email. Your initial password is your email.
+    %p.hint
+      Forgot your password?
+      = mail_to ENV.fetch("CSR_SUPPORT_MAILBOX", "CHANGE_ME@flex.com"), "Contact the team"

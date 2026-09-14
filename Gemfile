@@ -32,6 +32,9 @@ gem "importmap-rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
 
+# Views are written in Haml.
+gem "haml", "~> 6.3"
+
 # Authentication (accounts created by an admin, no self-signup) and the
 # admin-only role check on top of it.
 gem "devise", "~> 4.9"

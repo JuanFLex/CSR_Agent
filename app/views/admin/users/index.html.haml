@@ -1,0 +1,28 @@
+%main.page
+  .panel
+    .panel-head
+      %h2
+        Users
+        %span.count (#{@users.size})
+      = link_to "New user", new_admin_user_path, class: "button primary"
+    %table
+      %thead
+        %tr
+          %th Email
+          %th Role
+          %th.num Sign-ins
+          %th Last sign-in
+          %th
+      %tbody
+        - @users.each do |user|
+          %tr
+            %td= user.email
+            %td
+              %span{ class: "pill #{user.has_role?(:admin) ? "ok" : "unconfirmed"}" }= user.role
+            %td.num= user.sign_in_count
+            %td.muted= user.last_sign_in_at&.strftime("%Y-%m-%d %H:%M") || "never"
+            %td.actions
+              = link_to "Edit", edit_admin_user_path(user), class: "button"
+              - unless user == current_user
+                = button_to "Delete", admin_user_path(user), method: :delete, class: "button",
+                  form: { data: { turbo_confirm: "Delete #{user.email}?" } }
