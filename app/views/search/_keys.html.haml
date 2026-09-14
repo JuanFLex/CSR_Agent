@@ -1,0 +1,32 @@
+-# locals: (keys:, context:)
+-# A key can span several FPNs, customers or plants. The Excel had to pick one;
+-# here they are all listed, and a key spanning more than one is marked,
+-# because that is precisely where the workbook misreports.
+%section.panel
+  %header.panel-head
+    %h2
+      Part keys
+      %span.count= "(#{keys.size})"
+    - if context.any? { |_id, ctx| spans_many?(ctx) }
+      %span.multi-hint
+        %span.swatch>
+        More than one value — check which one the customer means
+  %table.keys
+    %thead
+      %tr
+        %th Key (CPN|MPN)
+        %th FPN
+        %th Customer
+        %th Plant
+    %tbody
+      - keys.each do |key|
+        - ctx = context[key.id] || {}
+        %tr
+          %td
+            %code= key.key_value
+          - SearchHelper::KEY_DIMENSIONS.each do |dimension|
+            - values = Array(ctx[dimension])
+            %td{ class: ("multi" if values.many?) }
+              = values.presence&.join(" · ") || "—"
+              - if values.many?
+                %span.badge= values.size

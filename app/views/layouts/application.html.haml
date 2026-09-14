@@ -1,0 +1,62 @@
+!!!
+%html{ lang: "en" }
+  %head
+    %title= content_for(:title) || "CSR Supply Visibility"
+    %meta{ name: "viewport", content: "width=device-width,initial-scale=1" }
+    %meta{ name: "apple-mobile-web-app-capable", content: "yes" }
+    %meta{ name: "mobile-web-app-capable", content: "yes" }
+    = csrf_meta_tags
+    = csp_meta_tag
+
+    = yield :head
+
+    -# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!)
+    -#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json)
+
+    %link{ rel: "icon", href: "/icon.png", type: "image/png" }
+    %link{ rel: "icon", href: "/icon.svg", type: "image/svg+xml" }
+    %link{ rel: "apple-touch-icon", href: "/icon.png" }
+
+    -# Includes all stylesheet files in app/assets/stylesheets
+    = stylesheet_link_tag :app, "data-turbo-track": "reload"
+    = javascript_importmap_tags
+
+  %body
+    - search_form_search = @search || Csr::SearchRequest.new
+    %header.topbar
+      %h1.brand
+        %svg{ width: "28", height: "28", viewBox: "0 0 28 28", fill: "none", "aria-hidden": "true" }
+          %rect{ x: "1", y: "1", width: "26", height: "26", rx: "7", fill: "#1d64d8" }
+          %path{ d: "M6 17h4l3-7 3 10 2-5h4", stroke: "#fff", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }
+        CSR Supply Visibility
+        - if @search
+          %span.region= @search.region
+
+      - if user_signed_in?
+        -# Only the search page has a #results frame to target: elsewhere the
+        -# form must do a normal full-page navigation to root_path.
+        = form_with url: root_path, method: :get, class: "search",
+                     data: (controller_name == "search" ? { turbo_frame: "results" } : {}) do |f|
+          = f.select :search_type, Csr::SearchRequest.options_for_select,
+                      { selected: search_form_search.search_type }, class: "type", aria: { label: "Search by" }
+          = f.text_field :value, value: search_form_search.value, placeholder: "Enter CPN, MPN, CPO-Line, SO or FPN…",
+                          autofocus: controller_name == "search", autocomplete: "off", aria: { label: "Search value" }
+          = button_tag type: "submit", name: nil, class: "go" do
+            %svg{ width: "15", height: "15", viewBox: "0 0 16 16", fill: "none", "aria-hidden": "true" }
+              %circle{ cx: "7", cy: "7", r: "4.8", stroke: "currentColor", "stroke-width": "1.8" }
+              %path{ d: "M10.6 10.6L14 14", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round" }
+            Search
+
+        .account
+          - if current_user.has_role?(:admin)
+            = link_to "Users", admin_users_path, class: "button"
+            = link_to "Usage", admin_usage_path, class: "button"
+          %span.muted= current_user.email
+          = button_to "Log out", destroy_user_session_path, method: :delete, class: "button"
+
+    - if notice.present?
+      %p.page-flash.notice= notice
+    - if alert.present?
+      %p.page-flash.alert= alert
+
+    = yield

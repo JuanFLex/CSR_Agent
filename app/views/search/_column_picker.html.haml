@@ -1,0 +1,17 @@
+-# locals: (model:, columns:, param:, search:)
+-# Every source carries more than a table can show at once, and which columns
+-# matter depends on who is reading. The choice rides in the URL, so a search
+-# can be shared with it, and sticks in a cookie for the next visit. Submitting
+-# one picker leaves the other table's choice to its cookie.
+%details.columns
+  %summary= "Columns (#{columns.size} of #{model::COLUMNS.size})"
+  = form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "column-picker" do
+    = hidden_field_tag :search_type, search.search_type
+    = hidden_field_tag :value, search.value
+    = hidden_field_tag :region, search.region
+    .choices
+      - model::COLUMNS.each do |column, label|
+        %label
+          = check_box_tag "#{param}[]", column, columns.include?(column), id: "#{param}-#{column}"
+          = label
+    = submit_tag "Apply", name: nil, class: "button primary"

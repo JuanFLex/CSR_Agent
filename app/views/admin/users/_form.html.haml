@@ -1,0 +1,28 @@
+= form_for [ :admin, @user ] do |f|
+  - if @user.errors.any?
+    %p.warn= @user.errors.full_messages.to_sentence
+
+  %p
+    = f.label :email
+    = f.email_field :email, autofocus: true
+
+  %p
+    = f.label :roles, "Role"
+    = f.select :roles, User::ROLES.map { |r| [ r.to_s.capitalize, r ] }, selected: @user.role
+
+  %p
+    = f.label :password
+    = f.password_field :password, autocomplete: "new-password"
+    %span.hint.muted
+      - if @user.persisted?
+        Leave blank to keep the current password.
+      - else
+        Leave blank to default the password to the email.
+
+  %p
+    = f.label :password_confirmation
+    = f.password_field :password_confirmation, autocomplete: "new-password"
+
+  %p
+    = f.submit class: "button primary"
+    = link_to "Cancel", admin_users_path, class: "button"

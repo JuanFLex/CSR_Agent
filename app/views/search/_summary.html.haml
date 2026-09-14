@@ -1,0 +1,36 @@
+-# locals: (summary:)
+-# SUMMARY!B4:B9 plus the combo count from E6. Risk is Excel parity: RED when any line has CDD > PDD.
+- late = summary[:misses].positive?
+%section.cards
+  .card.risk{ class: late ? "red" : "green" }
+    %span.label Execution risk
+    %span.value
+      = late ? "RED" : "GREEN"
+      - if late
+        %svg{ width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true" }
+          %path{ d: "M12 3.5L2.8 19.5h18.4L12 3.5z", stroke: "currentColor", "stroke-width": "2", "stroke-linejoin": "round" }
+          %path{ d: "M12 10v4.2", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round" }
+          %circle{ cx: "12", cy: "17", r: "1.2", fill: "currentColor" }
+      - else
+        %svg{ width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true" }
+          %circle{ cx: "12", cy: "12", r: "9", stroke: "currentColor", "stroke-width": "2" }
+          %path{ d: "M8 12.5l2.7 2.7L16 9.8", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }
+    %span.note= late ? "#{pluralize(summary[:misses], "late line")} · CDD > PDD" : "no late lines"
+
+  .card
+    %span.label Combinations
+    %span.value= summary[:combos_found]
+    %span.note CPN|MPN keys
+
+  .card
+    %span.label Open lines
+    %span.value= number_with_delimiter(summary[:open_lines])
+    %span.note= "#{number_with_delimiter(summary[:open_qty].to_i)} pcs ordered"
+
+  .card
+    %span.label ETD range
+    %span.value.range
+      = short_date(summary[:etd_min])
+      %span.arrow →
+      = short_date(summary[:etd_max])
+    %span.note earliest and latest CDD
