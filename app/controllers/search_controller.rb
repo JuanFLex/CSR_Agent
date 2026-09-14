@@ -8,10 +8,6 @@ class SearchController < ApplicationController
   # states the intent instead of relying on that.
   access user: :all
 
-  CSV_COLUMNS = %i[
-    cpn mpn fpn bp_name cpo cpo_pos so so_pos po baan_ordered pdd cdd miss so_status dates_condition
-  ].freeze
-
   def index
     @search = Csr::SearchRequest.new(params)
 
@@ -35,7 +31,8 @@ class SearchController < ApplicationController
   end
 
   def export_csv
-    send_data lines_csv, filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv"
+    send_data lines_csv(chosen_columns(Csr::OsorLine, :line_columns)),
+              filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv"
     log_search("export")
   end
 
@@ -64,10 +61,16 @@ class SearchController < ApplicationController
     chosen
   end
 
-  def lines_csv
+  # The export is the table: same columns, same order, same labels as whoever
+  # asked for it sees on screen.
+  #
+  # ponytail: builds the whole CSV in memory — a search is a part number, not a
+  # catalogue. Stream it (ActionController::Live) if an export ever gets big
+  # enough to notice.
+  def lines_csv(columns)
     CSV.generate do |csv|
-      csv << CSV_COLUMNS
-      @search.lines(limit: nil).each { |line| csv << CSV_COLUMNS.map { |column| line.public_send(column) } }
+      csv << columns.map { |column| Csr::OsorLine::COLUMNS[column] }
+      @search.lines(limit: nil).each { |line| csv << columns.map { |column| line.public_send(column) } }
     end
   end
 end

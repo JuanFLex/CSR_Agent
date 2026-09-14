@@ -13,7 +13,7 @@ module Csr
       cpn: "CPN", mpn: "MPN", fpn: "FPN", description: "Description", manufacturer: "Manufacturer",
       bp_name: "Customer", sold_to_bp: "Sold-to", ship_address: "Ship-to",
       baan_ordered: "Qty", spq: "SPQ", spq_ordered: "SPQ / Order", moq: "MOQ",
-      pdd: "Need (PDD)", cdd: "ETD (CDD)", promdd: "PROMDD", previous_cdd: "Previous CDD",
+      pdd: "Need (PDD)", cdd: "ETD (CDD)", miss: "Late", promdd: "PROMDD", previous_cdd: "Previous CDD",
       days_previous_cdd: "Days prev. CDD", cust_req_date: "Cust req date",
       cust_rec_date: "Cust rec date", order_date: "Order date",
       so_status: "SO status", so_type: "SO type", dates_condition: "Dates status",

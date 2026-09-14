@@ -82,7 +82,13 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "text/csv", response.media_type
     rows = CSV.parse(response.body)
-    assert_equal SearchController::CSV_COLUMNS.map(&:to_s), rows.first
+    assert_equal Csr::OsorLine::DEFAULT_COLUMNS.map { |c| Csr::OsorLine::COLUMNS[c] }, rows.first
     assert_equal 4, rows.size - 1
+  end
+
+  test "the CSV export carries the columns the table was showing" do
+    get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100", line_columns: %w[mpn miss] }
+
+    assert_equal [ "MPN", "Late" ], CSV.parse(response.body).first
   end
 end
