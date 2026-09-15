@@ -5,7 +5,7 @@ module Csr
   # The DBA reloads the staging tables with truncate+insert. Reading them live
   # would mean serving an empty portal for the length of every load, so this
   # takes a copy instead: new snapshot, then an atomic flip. Readers always see
-  # a complete picture, and last week's picture is still there.
+  # a complete picture, and the previous one is still there to roll back to.
   #
   # A subclass says where the rows come from (`source_type`, `staging`,
   # `load_rows`) and, when its source cannot say whether anything changed,
@@ -80,7 +80,17 @@ module Csr
       end
 
       snapshot.activate!
+      prune_history
       Result.new(status: :activated, snapshot: snapshot, message: activation_message(snapshot))
+    end
+
+    # Housekeeping, not part of the load: a failure here must not turn a
+    # snapshot that is already serving into a failed one, so it is logged and
+    # the next activation tries again.
+    def prune_history
+      Snapshot.prune!(source_type, region: @region)
+    rescue StandardError => e
+      Rails.logger.error("[csr.#{source_type}] pruning old snapshots failed: #{e.message}")
     end
 
     def activation_message(snapshot)

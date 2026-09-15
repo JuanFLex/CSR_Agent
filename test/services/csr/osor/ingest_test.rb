@@ -25,6 +25,7 @@ module Csr
         assert_predicate result.snapshot, :failed?
         assert_equal 1, result.snapshot.row_count
         assert_match(/beyond the 30% tolerance/, result.snapshot.notes)
+        assert_empty result.snapshot.osor_lines, "a rejected load's rows are deleted"
         assert_equal @snapshot, Snapshot.current("osor")
         assert_predicate @snapshot.reload, :active?
       end
@@ -77,6 +78,7 @@ module Csr
         assert_predicate result, :activated?
         assert_equal result.snapshot, Snapshot.current("osor")
         assert_predicate @snapshot.reload, :superseded?
+        assert_equal 2, Snapshot.for_source("osor").where(status: %w[active superseded]).count, "only the serving snapshot and the one before it are kept"
         assert_equal 5, result.snapshot.row_count
         assert_equal 1, result.snapshot.rejected_count
 
