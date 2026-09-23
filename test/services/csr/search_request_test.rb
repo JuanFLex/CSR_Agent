@@ -59,5 +59,14 @@ module Csr
         assert_equal Date.new(2026, 9, 10), SearchRequest.new(search_type: "cpn", value: "CPN-100").need_dates["FCS-CPN-100"].to_date
       end
     end
+
+    test "escalations match the FPNs on the orders, except on an MPN search" do
+      by_cpn = SearchRequest.new(search_type: "cpn", value: "CPN-100").escalations
+      by_mpn = SearchRequest.new(search_type: "mpn", value: "MPN-A").escalations
+
+      assert_not_includes by_cpn, csr_escalations(:other_fpn), "same MPN, another FPN"
+      assert_includes by_cpn, csr_escalations(:shortage)
+      assert_includes by_mpn, csr_escalations(:other_fpn)
+    end
   end
 end

@@ -91,7 +91,7 @@ module SearchHelper
     if (escalations = search.escalations).any?
       down = escalations.count(&:line_down?)
       points << safe_join([
-        tag.strong(pluralize(escalations.size, "open escalation")), " on these MPNs",
+        tag.strong(pluralize(escalations.size, "open escalation")), " on these #{search.search_type == "mpn" ? "MPNs" : "FPNs"}",
         down.positive? ? safe_join([ ", ", tag.strong("#{down} with the line down", class: "bad") ]) : "", "."
       ])
     end

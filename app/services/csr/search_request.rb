@@ -62,13 +62,15 @@ module Csr
       end
     end
 
-    # The open escalations raised against the MPNs of these keys. Measured on
-    # the real feed, matching by MPN already covers every escalation that FPN
-    # would have matched, so there is no second criterion to maintain.
+    # The open escalations of what was searched. FlexWare raises one FET per
+    # FPN, so a FET belongs to the FPNs on these orders; matching by MPN would
+    # add another customer's FETs that merely share the part (+29% measured).
+    # Only an MPN search asks for everything raised against the part.
     def escalations
       @escalations ||= begin
         snapshot = sources["escalation"]
-        snapshot ? Escalation.in_snapshot(snapshot).for_keys(part_keys).order(:mpn, :date_opened) : Escalation.none
+        matched = @search_type == "mpn" ? Escalation.for_keys(part_keys) : Escalation.where(fpn: scoped_lines.select(:fpn))
+        snapshot ? matched.in_snapshot(snapshot).order(:mpn, :date_opened) : Escalation.none
       end
     end
 
