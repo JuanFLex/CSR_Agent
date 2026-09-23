@@ -1,8 +1,8 @@
 -# locals: (escalations:, columns:, search:)
 -# Escalations attach by MPN, not by the CPN|MPN key: a FET carries no CPN, so
 -# one escalation can belong to several keys. It is listed against the MPN it
--# was raised on, and never folded into the risk card — the Excel's rule for
--# that ("Priority contains RED") has no column behind it.
+-# was raised on, and never folded into the risk card: nobody has said which
+-# tier is RED. The tier is computed from the orders of the escalation's FPN.
 %section.panel
   %header.panel-head
     %h2
@@ -27,6 +27,9 @@
           - columns.each do |column|
             %td{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= column_cell(escalation, column)
           %td
+            %span.pill.tier= Csr::Escalation.tier(search.need_dates[escalation.fpn])
+            - unless search.need_dates.key?(escalation.fpn)
+              %span.pill.unconfirmed No orders
             - if escalation.line_down?
               %span.pill.late Line down
             - if escalation.item_on_allocation == "Y"

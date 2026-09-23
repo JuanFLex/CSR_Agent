@@ -49,5 +49,15 @@ module Csr
       assert_empty search.lines
       assert_empty search.context
     end
+
+    test "need dates keep only the PDDs still ahead, per escalation FPN" do
+      search = SearchRequest.new(search_type: "cpn", value: "CPN-100")
+
+      assert_equal({ "FCS-CPN-100" => nil }, search.need_dates, "every fixture PDD is past due")
+
+      travel_to Date.new(2026, 9, 1) do
+        assert_equal Date.new(2026, 9, 10), SearchRequest.new(search_type: "cpn", value: "CPN-100").need_dates["FCS-CPN-100"].to_date
+      end
+    end
   end
 end

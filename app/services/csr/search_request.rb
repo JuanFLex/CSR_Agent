@@ -72,6 +72,19 @@ module Csr
       end
     end
 
+    # The earliest PDD still ahead on the open orders of each escalation's FPN,
+    # which is what the tier measures. An FPN whose orders are all past due maps
+    # to nil; one with no open order at all is absent.
+    def need_dates
+      @need_dates ||= begin
+        today = Date.current
+        rows = snapshot ? OsorLine.in_snapshot(snapshot).where(fpn: escalations.map(&:fpn)).pluck(:fpn, :pdd) : []
+        rows.group_by(&:first).transform_values do |pairs|
+          pairs.filter_map { |_fpn, pdd| pdd if pdd && pdd.to_date >= today }.min
+        end
+      end
+    end
+
     def lines(limit: MAX_LINES)
       scoped_lines.order(:cdd, :so, :so_pos).limit(limit)
     end

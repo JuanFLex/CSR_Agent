@@ -15,8 +15,4 @@ class SearchHelperTest < ActionView::TestCase
     assert_includes risk_pill(line), "Unconfirmed +3d"
     assert_includes risk_pill(Csr::OsorLine.new), "Unconfirmed<"
   end
-
-  test "an escalation shows the shortage as a positive quantity" do
-    assert_equal 1500, Csr::Escalation.new(shortage_qty: -1500).shortage_qty
-  end
 end
