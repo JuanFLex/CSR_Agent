@@ -11,7 +11,7 @@ module Csr
     COLUMNS = {
       cpo_ref: "CPO", so_ref: "SO", po: "PO", po_pos: "PO Pos", seq: "Seq",
       cpn: "CPN", mpn: "MPN", fpn: "FPN", description: "Description", manufacturer: "Manufacturer",
-      bp_name: "Customer", sold_to_bp: "Sold-to", ship_address: "Ship-to",
+      bp_name: "Sold-to", sold_to_bp: "Sold-to code", ship_address: "Ship-to",
       baan_ordered: "Qty", spq: "SPQ", spq_ordered: "SPQ / Order", moq: "MOQ",
       pdd: "Need (PDD)", cdd: "ETD (CDD)", miss: "Late", promdd: "PROMDD", previous_cdd: "Previous CDD",
       days_previous_cdd: "Days prev. CDD", cust_req_date: "Cust req date",

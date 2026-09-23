@@ -31,7 +31,7 @@ module Csr
       owner_role:         "Owner role",
       owner_email:        "Owner email",
       age_current_owner:  "Days with owner",
-      customer:           "Sold-to",
+      customer:           "Global customer",
       manufacturer:       "Manufacturer",
       supplier:           "Supplier",
       description:        "Description",
