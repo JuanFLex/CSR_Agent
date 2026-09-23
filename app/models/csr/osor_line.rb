@@ -32,7 +32,7 @@ module Csr
       source_last_update: "Source updated"
     }.freeze
 
-    DEFAULT_COLUMNS = %i[cpo_ref so_ref po mpn baan_ordered pdd cdd so_status].freeze
+    DEFAULT_COLUMNS = %i[cpo_ref so_ref order_date po mpn baan_ordered pdd cdd so_status].freeze
 
     # The two columns tOSOR computes rather than stores. They stay virtual, so
     # a snapshot holds what the source said and nothing else.

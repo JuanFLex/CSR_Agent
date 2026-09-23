@@ -26,12 +26,12 @@ module Csr
       escalation_status:  "Status",
       date_opened:        "Opened",
       days_open:          "Days open",
-      shortage_qty:       "Shortage",
+      shortage_qty:       "Short qty",
       owner_name:         "Owner",
       owner_role:         "Owner role",
       owner_email:        "Owner email",
       age_current_owner:  "Days with owner",
-      customer:           "Customer",
+      customer:           "Sold-to",
       manufacturer:       "Manufacturer",
       supplier:           "Supplier",
       description:        "Description",
@@ -50,5 +50,9 @@ module Csr
     # The one severity flag CSR_FET actually carries. Priority (T0-T3) lives in
     # the escalation spreadsheet, not in this table.
     def line_down? = line_down == "Y"
+
+    # ponytail: CSR_FET signs a shortage negative; the stored value keeps the
+    # source's sign and only the reader sees the quantity short.
+    def shortage_qty = super&.abs
   end
 end
