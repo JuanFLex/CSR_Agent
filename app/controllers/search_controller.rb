@@ -23,6 +23,7 @@ class SearchController < ApplicationController
     @summary = @search.summary
     @keys = @search.part_keys.order(:key_value).to_a
     @context = @search.context
+    @buffer = @search.buffer
     @lines = @search.lines.to_a
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)

@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_180000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_08_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "csr_buffer_lines", force: :cascade do |t|
+    t.bigint "snapshot_id", null: false
+    t.bigint "part_key_id"
+    t.string "cpn", limit: 200
+    t.string "mpn", limit: 200
+    t.string "fpn", limit: 200
+    t.string "site", limit: 50
+    t.string "supplier", limit: 255
+    t.string "customer_id", limit: 100
+    t.string "ship_address", limit: 100
+    t.decimal "safety_stock", precision: 18, scale: 4
+    t.date "bucket_date", null: false
+    t.decimal "vs_ss", precision: 18, scale: 4
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snapshot_id", "part_key_id"], name: "index_csr_buffer_lines_on_snapshot_id_and_part_key_id"
+  end
 
   create_table "csr_escalations", force: :cascade do |t|
     t.bigint "snapshot_id", null: false
@@ -194,6 +212,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_180000) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "csr_buffer_lines", "csr_part_keys", column: "part_key_id"
+  add_foreign_key "csr_buffer_lines", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_escalations", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_osor_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_osor_lines", "csr_snapshots", column: "snapshot_id"

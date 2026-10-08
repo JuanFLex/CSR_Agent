@@ -53,6 +53,12 @@ module Csr
       @context ||= KeyContext.new(part_keys, snapshot: snapshot).call
     end
 
+    # Where each key's buffer stands, from the buffer snapshot. It has its own
+    # cadence (weekly), so it is never read through the OSOR one.
+    def buffer
+      @buffer ||= BufferSummary.new(part_keys, snapshot: sources["buffer"]).call
+    end
+
     # The active snapshot of every source, nil for one never loaded — the
     # freshness chips. One query rather than one per source.
     def sources

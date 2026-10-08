@@ -91,4 +91,20 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal [ "MPN", "Late" ], CSV.parse(response.body).first
   end
+
+  test "shows where each key's buffer stands" do
+    snapshot = Csr::Snapshot.create!(region: "Americas", source_type: "buffer", status: :active,
+                                     source_file: "CSR_BUFFER_READINESS", activated_at: Time.current)
+    [ 2, 0.5, 1 ].each_with_index do |ratio, week|
+      Csr::BufferLine.create!(snapshot: snapshot, part_key: csr_part_keys(:primary), safety_stock: 8000,
+                              bucket_date: Date.new(2026, 9, 26) + week.weeks, vs_ss: ratio)
+    end
+
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select "table.keys tbody tr", text: /MPN-A.*Below target · 0.5×.*Sep 26/m, count: 1
+    assert_select "table.keys .pill", count: 1, message: "a key the buffer report does not carry shows no state"
+    assert_select ".narrative li", text: /Buffer: 1 of 1 key with a safety stock drops below it \(lowest 0.5×\)/
+    assert_select ".sources .source.live", text: /Buffer.*CSR_BUFFER_READINESS/m
+  end
 end

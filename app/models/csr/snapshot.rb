@@ -14,6 +14,7 @@ module Csr
 
     has_many :osor_lines, dependent: :delete_all, inverse_of: :snapshot
     has_many :escalations, dependent: :delete_all, inverse_of: :snapshot
+    has_many :buffer_lines, dependent: :delete_all, inverse_of: :snapshot
 
     enum :status, {
       loading:    "loading",
@@ -69,6 +70,7 @@ module Csr
       transaction do
         osor_lines.delete_all
         escalations.delete_all
+        buffer_lines.delete_all
         update!(status: :failed, notes: reason)
       end
       self

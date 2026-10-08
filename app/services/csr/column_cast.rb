@@ -38,6 +38,7 @@ module Csr
       when :decimal  then to_decimal(value)
       when :integer  then to_decimal(value)&.to_i
       when :datetime then to_time(value)
+      when :date     then to_time(value)&.to_date
       end
     end
 

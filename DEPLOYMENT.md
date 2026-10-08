@@ -201,14 +201,20 @@ which is why the header above is not optional.
 
 ## 8. First load
 
-The portal shows nothing until a snapshot exists. Run both ingests by hand
+The portal shows nothing until a snapshot exists. Run the ingests by hand
 once, then let the schedule take over:
 
 ```bash
 set -a; . /etc/csr_agent.env; set +a
 bundle exec rails runner 'p Csr::Osor::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Fet::Ingest.new(force: true).call.message'
+bundle exec rails runner 'p Csr::Buffer::Ingest.new(force: true).call.message'
 ```
+
+Buffer reads `CSR_BUFFER_READINESS`, which the ETL has to create and fill:
+the table and the fill are in `script/sql/csr_buffer_readiness.sql`. Until it
+exists the buffer ingest fails and says so in the log, and the portal shows
+Buffer as not loaded; nothing else is affected.
 
 ## 9. Backup
 
@@ -243,7 +249,7 @@ Then search `STL135N8F7AG` (red, with a line-down escalation) and
 ## Jobs
 
 `config/recurring.yml` schedules the ingests in production: OSOR every 15
-minutes, FET every hour. They only run while Solid Queue runs.
+minutes, FET and Buffer every hour. They only run while Solid Queue runs.
 
 - `SOLID_QUEUE_IN_PUMA=1` (above) runs the workers inside the web process. One
   unit to manage, fine for UAT.
