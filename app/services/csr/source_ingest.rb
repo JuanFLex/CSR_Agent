@@ -84,6 +84,41 @@ module Csr
       Result.new(status: :activated, snapshot: snapshot, message: activation_message(snapshot))
     end
 
+    # The CPN|MPN key of each row, created if this is the first time the part
+    # is seen: one round trip per batch instead of one per row. Returns the ids
+    # by key value, and the key value of every row in order. A row whose CPN
+    # or MPN is missing gets no key; the caller counts it as rejected rather
+    # than dropping it quietly, because a row that vanishes from the portal
+    # without a trace is worse than one that is visibly unmatched.
+    def resolve_part_keys(attribute_sets)
+      key_values = []
+      candidates = attribute_sets.filter_map do |attrs|
+        key_value = PartKey.build_key(attrs[:cpn], attrs[:mpn])
+        key_values << key_value
+        next if key_value.nil?
+
+        {
+          key_value: key_value,
+          cpn: PartKey.normalize(attrs[:cpn]),
+          mpn: PartKey.normalize(attrs[:mpn]),
+          region: @region
+        }
+      end.uniq { |c| c[:key_value] }
+
+      return [ {}, key_values ] if candidates.empty?
+
+      # ON CONFLICT DO NOTHING rather than read-then-insert: a scheduled run
+      # and a forced one can overlap (Snapshot#activate! is built for that),
+      # and both may try to create the same new key. The loser skips it
+      # instead of failing its whole load on the unique index. All writes go
+      # to Postgres, so there is no other adapter to stay neutral for.
+      PartKey.insert_all(candidates, unique_by: %i[region key_value])
+      ids = PartKey.where(region: @region, key_value: candidates.map { |c| c[:key_value] })
+                   .pluck(:key_value, :id).to_h
+
+      [ ids, key_values ]
+    end
+
     # Housekeeping, not part of the load: a failure here must not turn a
     # snapshot that is already serving into a failed one, so it is logged and
     # the next activation tries again.

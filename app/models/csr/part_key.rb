@@ -15,6 +15,8 @@ module Csr
     SEPARATOR = "|".freeze
 
     has_many :osor_lines, dependent: :nullify, inverse_of: :part_key
+    has_many :buffer_lines, dependent: :nullify, inverse_of: :part_key
+    has_many :commit_lines, dependent: :nullify, inverse_of: :part_key
 
     validates :key_value, presence: true, uniqueness: { scope: :region }
     validates :cpn, :mpn, presence: true

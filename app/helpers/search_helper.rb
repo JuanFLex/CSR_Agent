@@ -62,6 +62,41 @@ module SearchHelper
     end
   end
 
+  # A key that can break between its CPN and its MPN, and nowhere else, so a
+  # long one gives the table room instead of pushing its last columns out.
+  def key_code(key)
+    tag.code(safe_join([ tag.span("#{key.cpn}|"), tag.wbr, tag.span(key.mpn) ]))
+  end
+
+  # A balance as a multiple of the safety stock: 0.5× is half the target.
+  def buffer_ratio(value)
+    "#{number_with_precision(value, precision: 2, strip_insignificant_zeros: true)}×"
+  end
+
+  # Where a key's buffer stands. "No target" is a part with no safety stock
+  # agreed, which the workbook shows as a 0 and flags; "—" is a part the
+  # buffer report does not carry at all.
+  def buffer_pill(position)
+    return "—" if position.nil?
+    return tag.span("No target", class: "pill unconfirmed") if position.no_target?
+
+    lowest = buffer_ratio(position.min_vs_ss)
+    position.below_target? ? tag.span("Below target · #{lowest}", class: "pill late") : tag.span("Covered · #{lowest}", class: "pill ok")
+  end
+
+  # A commit balance is negative when short; it is read as that many pieces.
+  def short_qty(balance)
+    number_with_delimiter(balance.abs.to_i)
+  end
+
+  # Where a key's commit stands: the most pieces of forecast left without a
+  # commitment in any week. "—" is a part the commit report does not carry.
+  def commit_pill(position)
+    return "—" if position.nil?
+
+    position.short? ? tag.span("Short · #{short_qty(position.min_balance)}", class: "pill late") : tag.span("Covered", class: "pill ok")
+  end
+
   # The Summary bullets. The same list is the body of "Copy to email", so the
   # card and the email cannot say different things.
   def summary_points(search, summary, context)
@@ -94,6 +129,32 @@ module SearchHelper
         tag.strong(pluralize(escalations.size, "open escalation")), " on these #{search.search_type == "mpn" ? "MPNs" : "FPNs"}",
         down.positive? ? safe_join([ ", ", tag.strong("#{down} with the line down", class: "bad") ]) : "", "."
       ])
+    end
+
+    targeted = search.buffer.values.reject(&:no_target?)
+    if targeted.any?
+      below = targeted.select(&:below_target?)
+      points << if below.any?
+        safe_join([
+          "Buffer: ", tag.strong("#{below.size} of #{pluralize(targeted.size, "key")}", class: "bad"),
+          " with a safety stock #{below.size == 1 ? "drops" : "drop"} below it (lowest #{buffer_ratio(below.map(&:min_vs_ss).min)})."
+        ])
+      else
+        "Buffer: #{targeted.size == 1 ? "the key" : "all #{targeted.size} keys"} with a safety stock #{targeted.size == 1 ? "stays" : "stay"} at or above it."
+      end
+    end
+
+    committed = search.commit.values
+    if committed.any?
+      short = committed.select(&:short?)
+      points << if short.any?
+        safe_join([
+          "Commit: ", tag.strong("#{short.size} of #{pluralize(committed.size, "key")}", class: "bad"),
+          " #{short.size == 1 ? "runs" : "run"} short of the forecast (up to #{short_qty(short.map(&:min_balance).min)} pcs, from #{short_date(short.map(&:short_from).min)})."
+        ])
+      else
+        "Commit: #{committed.size == 1 ? "the key is" : "all #{committed.size} keys are"} covered against the forecast."
+      end
     end
 
     spanning = context.count { |_id, ctx| spans_many?(ctx) }

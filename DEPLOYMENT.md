@@ -201,14 +201,31 @@ which is why the header above is not optional.
 
 ## 8. First load
 
-The portal shows nothing until a snapshot exists. Run both ingests by hand
+The portal shows nothing until a snapshot exists. Run the ingests by hand
 once, then let the schedule take over:
 
 ```bash
 set -a; . /etc/csr_agent.env; set +a
 bundle exec rails runner 'p Csr::Osor::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Fet::Ingest.new(force: true).call.message'
+bundle exec rails runner 'p Csr::Buffer::Ingest.new(force: true).call.message'
+bundle exec rails runner 'p Csr::Commit::Ingest.new(force: true).call.message'
 ```
+
+Buffer and Commit read the sheets of `CS_Trend_Forecast.xlsx` as the ETL
+already copies them, so there is nothing to create for them:
+
+| Table | Read for |
+|---|---|
+| `CS_tempTrendBufferReadinessProjection` | Buffer: the `Balance vs SS (Buffer Stock)` rows |
+| `CSR_CustomerCommitment` | Commit: the `Balance` rows |
+| `CS_tempVerticalCommit` | the date of the first week, for both |
+
+The first two need a `loaded_at` column stamped by the ETL on every load: it
+is how the portal knows there is something new. Without `force`, a load less
+than 30 minutes old is left for the next hourly poll, in case the package is
+still running. If either ingest fails it says why in the log, the portal
+keeps showing the previous load of that source, and nothing else is affected.
 
 ## 9. Backup
 
@@ -243,7 +260,7 @@ Then search `STL135N8F7AG` (red, with a line-down escalation) and
 ## Jobs
 
 `config/recurring.yml` schedules the ingests in production: OSOR every 15
-minutes, FET every hour. They only run while Solid Queue runs.
+minutes, FET and Buffer every hour. They only run while Solid Queue runs.
 
 - `SOLID_QUEUE_IN_PUMA=1` (above) runs the workers inside the web process. One
   unit to manage, fine for UAT.

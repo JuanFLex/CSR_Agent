@@ -18,6 +18,18 @@ production:
     class: Csr::FetIngestJob
     schedule: every hour
 
+  # Buffer and Commit come out of the same weekly workbook, and nobody has
+  # said which day the ETL reloads it. An hourly poll costs one MAX(loaded_at)
+  # per table and picks the load up whatever the day. A load less than half an
+  # hour old is left for the next poll, in case the ETL is still running.
+  buffer_ingest:
+    class: Csr::BufferIngestJob
+    schedule: every hour
+
+  commit_ingest:
+    class: Csr::CommitIngestJob
+    schedule: every hour at minute 5
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

@@ -107,7 +107,7 @@ td.actions { display: flex; gap: 8px; }
 .card.risk.green { background: var(--green); }
 
 /* Panels */
-.split { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.split { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
 .panel { border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: auto; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
 h2 { margin: 0; font-size: 15px; font-weight: 600; }
@@ -137,7 +137,8 @@ tr.miss td:first-child { box-shadow: inset 3px 0 0 var(--red); }
 /* A cell holding more than one value is a place the Excel would have silently
    shown just one of them. */
 td.multi { background: var(--amber-bg); }
-table.keys td:first-child { white-space: nowrap; }
+table.keys td:first-child span { white-space: nowrap; }
+table.keys .since { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px; background: var(--amber); color: #fff; font-size: 11px; font-weight: 700; }
 
 .columns { border-bottom: 1px solid var(--line); font-size: 13px; }
