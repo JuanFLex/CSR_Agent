@@ -62,13 +62,28 @@ module Csr
       end
     end
 
-    # The open escalations raised against the MPNs of these keys. Measured on
-    # the real feed, matching by MPN already covers every escalation that FPN
-    # would have matched, so there is no second criterion to maintain.
+    # The open escalations of what was searched. FlexWare raises one FET per
+    # FPN, so a FET belongs to the FPNs on these orders; matching by MPN would
+    # add another customer's FETs that merely share the part (+29% measured).
+    # Only an MPN search asks for everything raised against the part.
     def escalations
       @escalations ||= begin
         snapshot = sources["escalation"]
-        snapshot ? Escalation.in_snapshot(snapshot).for_keys(part_keys).order(:mpn, :date_opened) : Escalation.none
+        matched = @search_type == "mpn" ? Escalation.for_keys(part_keys) : Escalation.where(fpn: scoped_lines.select(:fpn))
+        snapshot ? matched.in_snapshot(snapshot).order(:mpn, :date_opened) : Escalation.none
+      end
+    end
+
+    # The earliest PDD still ahead on the open orders of each escalation's FPN,
+    # which is what the tier measures. An FPN whose orders are all past due maps
+    # to nil; one with no open order at all is absent.
+    def need_dates
+      @need_dates ||= begin
+        today = Date.current
+        rows = snapshot ? OsorLine.in_snapshot(snapshot).where(fpn: escalations.map(&:fpn)).pluck(:fpn, :pdd) : []
+        rows.group_by(&:first).transform_values do |pairs|
+          pairs.filter_map { |_fpn, pdd| pdd if pdd && pdd.to_date >= today }.min
+        end
       end
     end
 

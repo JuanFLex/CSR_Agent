@@ -48,7 +48,8 @@ module SearchHelper
   end
 
   # Late / On time follows the miss rule (CDD > PDD). A line with no CDD is
-  # unconfirmed, not a third risk tier — nobody has defined one yet.
+  # unconfirmed, not a risk: its age since the order was created shows how
+  # much of the 5 days to confirm is gone.
   def risk_pill(line)
     if line.miss
       days = slip_days(line)
@@ -56,7 +57,8 @@ module SearchHelper
     elsif line.cdd
       tag.span("On time", class: "pill ok")
     else
-      tag.span("Unconfirmed", class: "pill unconfirmed")
+      age = line.order_date && (Date.current - line.order_date.to_date).to_i
+      tag.span(age ? "Unconfirmed +#{age}d" : "Unconfirmed", class: "pill unconfirmed")
     end
   end
 
@@ -89,14 +91,14 @@ module SearchHelper
     if (escalations = search.escalations).any?
       down = escalations.count(&:line_down?)
       points << safe_join([
-        tag.strong(pluralize(escalations.size, "open escalation")), " on these MPNs",
+        tag.strong(pluralize(escalations.size, "open escalation")), " on these #{search.search_type == "mpn" ? "MPNs" : "FPNs"}",
         down.positive? ? safe_join([ ", ", tag.strong("#{down} with the line down", class: "bad") ]) : "", "."
       ])
     end
 
     spanning = context.count { |_id, ctx| spans_many?(ctx) }
     if spanning.positive?
-      points << safe_join([ tag.strong(pluralize(spanning, "key")), " #{spanning == 1 ? "spans" : "span"} more than one FPN, customer or plant." ])
+      points << safe_join([ tag.strong(pluralize(spanning, "key")), " #{spanning == 1 ? "spans" : "span"} more than one FPN, sold-to or plant." ])
     end
 
     points

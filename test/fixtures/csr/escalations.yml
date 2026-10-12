@@ -25,3 +25,17 @@ return_excess:
   shortage_qty: 0
   owner_name: B. Planner
   line_down: "N"
+
+other_fpn:
+  snapshot: fet
+  escalation_number: "20250716610060.1"
+  escalation_type: SHORTAGE ESCALATION
+  escalation_status: OPEN
+  mpn: MPN-A
+  fpn: FCS-ELSEWHERE
+  date_opened: 2026-08-20 00:00:00
+  updated_date: 2026-09-10 00:00:00
+  days_open: 21
+  shortage_qty: 200
+  owner_name: C. Buyer
+  line_down: "N"

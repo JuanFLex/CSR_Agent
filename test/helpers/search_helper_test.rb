@@ -8,4 +8,11 @@ class SearchHelperTest < ActionView::TestCase
     assert_equal "Mar 07, #{this_year.year - 1}", short_date(this_year.prev_year)
     assert_equal "—", short_date(nil)
   end
+
+  test "an unconfirmed line shows how long ago the order was created" do
+    line = Csr::OsorLine.new(order_date: 3.days.ago, pdd: 1.week.from_now)
+
+    assert_includes risk_pill(line), "Unconfirmed +3d"
+    assert_includes risk_pill(Csr::OsorLine.new), "Unconfirmed<"
+  end
 end

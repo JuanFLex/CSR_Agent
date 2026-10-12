@@ -40,18 +40,18 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "table.escalations tbody tr", count: 2
     assert_select "table.escalations tbody tr.miss td", text: /20250716610058.2/
-    assert_select ".narrative li", text: /2 open escalations on these MPNs, 1 with the line down/
+    assert_select ".narrative li", text: /2 open escalations on these FPNs, 1 with the line down/
   end
 
   test "shows the default escalation columns and swaps them for the chosen ones" do
     get root_url, params: { search_type: "cpn", value: "CPN-100" }
 
     assert_select "table.escalations thead th", text: "FET #"
-    assert_select "table.escalations thead th", text: "Customer", count: 0
+    assert_select "table.escalations thead th", text: "Global customer", count: 0
 
     get root_url, params: { search_type: "cpn", value: "CPN-100", escalation_columns: %w[mpn customer nonsense] }
 
-    assert_select "table.escalations thead th", text: "Customer"
+    assert_select "table.escalations thead th", text: "Global customer"
     assert_select "table.escalations thead th", text: "FET #", count: 0
     assert_equal "mpn,customer", cookies[:escalation_columns], "the choice is remembered per browser"
   end

@@ -11,7 +11,7 @@ module Csr
     COLUMNS = {
       cpo_ref: "CPO", so_ref: "SO", po: "PO", po_pos: "PO Pos", seq: "Seq",
       cpn: "CPN", mpn: "MPN", fpn: "FPN", description: "Description", manufacturer: "Manufacturer",
-      bp_name: "Customer", sold_to_bp: "Sold-to", ship_address: "Ship-to",
+      bp_name: "Sold-to", sold_to_bp: "Sold-to code", ship_address: "Ship-to",
       baan_ordered: "Qty", spq: "SPQ", spq_ordered: "SPQ / Order", moq: "MOQ",
       pdd: "Need (PDD)", cdd: "ETD (CDD)", miss: "Late", promdd: "PROMDD", previous_cdd: "Previous CDD",
       days_previous_cdd: "Days prev. CDD", cust_req_date: "Cust req date",
@@ -32,7 +32,7 @@ module Csr
       source_last_update: "Source updated"
     }.freeze
 
-    DEFAULT_COLUMNS = %i[cpo_ref so_ref po mpn baan_ordered pdd cdd so_status].freeze
+    DEFAULT_COLUMNS = %i[cpo_ref so_ref order_date po mpn baan_ordered pdd cdd so_status].freeze
 
     # The two columns tOSOR computes rather than stores. They stay virtual, so
     # a snapshot holds what the source said and nothing else.
