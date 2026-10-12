@@ -17,7 +17,7 @@
       - else
         = render "summary", summary: @summary
         .split
-          = render "keys", keys: @keys, context: @context, buffer: @buffer
+          = render "keys", keys: @keys, context: @context, buffer: @buffer, commit: @commit
           = render "narrative", search: @search, summary: @summary, context: @context
         - if @escalations.any?
           = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search

@@ -1,9 +1,10 @@
 module Csr
-  # Reloads CSR_BUFFER_READINESS into a snapshot when the ETL has refilled it.
+  # Reloads CS_tempTrendBufferReadinessProjection into a snapshot when the ETL
+  # has refilled it.
   #
-  # The Buffer Readiness file is weekly. This polls hourly and exits on a
-  # single MAX(LOADED_AT) when nothing changed, so a load is picked up within
-  # the hour of landing without anyone having to say which day it lands.
+  # The Buffer Readiness sheet is weekly. This polls hourly and exits on a
+  # single MAX(loaded_at) when nothing changed, so a load is picked up without
+  # anyone having to say which day it lands.
   class BufferIngestJob < ApplicationJob
     queue_as :default
 

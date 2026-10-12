@@ -136,3 +136,26 @@ SELECT TOP 1 *
 FROM CSR_OSOR_AMERICAS
 WHERE MPN IS NOT NULL
   AND CPN_EDI IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- 6. The weekly sheets: Buffer and Commit.
+--
+-- Settles: whether the login can read the three tables the weekly ingests use,
+-- and whether the two wide ones carry the load stamp. can_select should be 1
+-- on all three. last_load must not be NULL: it is the only thing that tells
+-- the portal a new workbook was loaded.
+-- ---------------------------------------------------------------------------
+SELECT
+    HAS_PERMS_BY_NAME('dbo.CS_tempTrendBufferReadinessProjection', 'OBJECT', 'SELECT') AS can_select_buffer,
+    HAS_PERMS_BY_NAME('dbo.CSR_CustomerCommitment', 'OBJECT', 'SELECT')                AS can_select_commit,
+    HAS_PERMS_BY_NAME('dbo.CS_tempVerticalCommit', 'OBJECT', 'SELECT')                 AS can_select_first_week;
+
+SELECT 'buffer' AS sheet, COUNT(*) AS total_rows, MAX(loaded_at) AS last_load
+FROM CS_tempTrendBufferReadinessProjection
+UNION ALL
+SELECT 'commit', COUNT(*), MAX(loaded_at)
+FROM CSR_CustomerCommitment;
+
+-- The first week of both sheets. It has to be a Saturday.
+SELECT MIN(TRY_CONVERT(date, [DATE], 101)) AS first_week
+FROM CS_tempVerticalCommit;

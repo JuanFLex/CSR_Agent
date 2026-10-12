@@ -1,8 +1,9 @@
--# locals: (keys:, context:, buffer:)
+-# locals: (keys:, context:, buffer:, commit:)
 -# A key can span several FPNs, customers or plants. The Excel had to pick one;
 -# here they are all listed, and a key spanning more than one is marked,
 -# because that is precisely where the workbook misreports.
--# Buffer is the key's own position, taken across every buffer row it has.
+-# Buffer and Commit are the key's own position, taken across every row it has
+-# in each report.
 %section.panel
   %header.panel-head
     %h2
@@ -19,14 +20,13 @@
         %th FPN
         %th Customer
         %th Plant
-        %th{ title: "Lowest week of the projected balance against safety stock (1× is on target)" } Buffer
-        %th{ title: "First week the projected balance is at or above safety stock" } At target from
+        %th{ title: "Lowest week of the projected balance against safety stock (1× is on target), and the first week at or above it" } Buffer
+        %th{ title: "Most pieces of forecast left without a commitment in any week, and the first week that happens" } Commit
     %tbody
       - keys.each do |key|
         - ctx = context[key.id] || {}
         %tr
-          %td
-            %code= key.key_value
+          %td= key_code(key)
           - SearchHelper::KEY_DIMENSIONS.each do |dimension|
             - values = Array(ctx[dimension])
             %td{ class: ("multi" if values.many?) }
@@ -34,5 +34,12 @@
               - if values.many?
                 %span.badge= values.size
           - position = buffer[key.id]
-          %td= buffer_pill(position)
-          %td= short_date(position&.at_target_from)
+          %td
+            = buffer_pill(position)
+            - if position&.at_target_from
+              %span.since= "at target from #{short_date(position.at_target_from)}"
+          - position = commit[key.id]
+          %td
+            = commit_pill(position)
+            - if position&.short_from
+              %span.since= "from #{short_date(position.short_from)}"

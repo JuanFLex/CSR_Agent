@@ -59,6 +59,11 @@ module Csr
       @buffer ||= BufferSummary.new(part_keys, snapshot: sources["buffer"]).call
     end
 
+    # Where each key's commit stands, from the commit snapshot. Weekly too.
+    def commit
+      @commit ||= CommitSummary.new(part_keys, snapshot: sources["commit"]).call
+    end
+
     # The active snapshot of every source, nil for one never loaded — the
     # freshness chips. One query rather than one per source.
     def sources

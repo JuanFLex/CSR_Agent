@@ -1,10 +1,12 @@
 module Csr
   module Buffer
-    # CSR_BUFFER_READINESS's column names married to the vocabulary the rest
-    # of the app uses: FCP_PART is the FPN, MANUFACTURER_PART is the MPN, and
-    # DELIVERY_ADDRESS is what OSOR calls the ship-to.
+    # CS_tempTrendBufferReadinessProjection's column names married to the
+    # vocabulary the rest of the app uses: FCP_PART is the FPN,
+    # MANUFACTURER_PART is the MPN, and DELIVERY_ADDRESS is what OSOR calls
+    # the ship-to.
     module ColumnMap
       extend Csr::ColumnCast
+      extend Csr::WeeklyColumnMap
 
       # staging column => [ attribute, type ]
       COLUMNS = {
@@ -15,20 +17,13 @@ module Csr
         "SUPPLIER_NAME"             => [ :supplier,     :string ],
         "CUSTOMER_ID"               => [ :customer_id,  :string ],
         "DELIVERY_ADDRESS"          => [ :ship_address, :string ],
-        "SAFETY_STOCK_CONSIDER_SPQ" => [ :safety_stock, :decimal ],
-        "BUCKET_DATE"               => [ :bucket_date,  :date ],
-        "VS_SS"                     => [ :vs_ss,        :decimal ]
+        "SAFETY_STOCK_CONSIDER_SPQ" => [ :safety_stock, :decimal ]
       }.freeze
 
-      SELECT_COLUMNS = COLUMNS.keys.freeze
-
-      # The part handles are stored the way Csr::PartKey stores them, so a
-      # buffer row lands on the same key as the order lines of that part.
-      def self.cast(row)
-        attrs = super
-        %i[cpn mpn fpn].each { |handle| attrs[handle] = PartKey.normalize(attrs[handle]) }
-        attrs
-      end
+      # The sheet has 51 dated weeks and the table 50 numbered columns, so the
+      # last week landed in FUTURE: it is the 51st week, not a bucket for
+      # everything beyond. PAST is left out, as the workbook leaves it out.
+      WEEK_COLUMNS = [ *(21..70).map { |n| "F#{n}" }, "FUTURE" ].freeze
     end
   end
 end

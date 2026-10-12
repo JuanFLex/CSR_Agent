@@ -209,12 +209,23 @@ set -a; . /etc/csr_agent.env; set +a
 bundle exec rails runner 'p Csr::Osor::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Fet::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Buffer::Ingest.new(force: true).call.message'
+bundle exec rails runner 'p Csr::Commit::Ingest.new(force: true).call.message'
 ```
 
-Buffer reads `CSR_BUFFER_READINESS`, which the ETL has to create and fill:
-the table and the fill are in `script/sql/csr_buffer_readiness.sql`. Until it
-exists the buffer ingest fails and says so in the log, and the portal shows
-Buffer as not loaded; nothing else is affected.
+Buffer and Commit read the sheets of `CS_Trend_Forecast.xlsx` as the ETL
+already copies them, so there is nothing to create for them:
+
+| Table | Read for |
+|---|---|
+| `CS_tempTrendBufferReadinessProjection` | Buffer: the `Balance vs SS (Buffer Stock)` rows |
+| `CSR_CustomerCommitment` | Commit: the `Balance` rows |
+| `CS_tempVerticalCommit` | the date of the first week, for both |
+
+The first two need a `loaded_at` column stamped by the ETL on every load: it
+is how the portal knows there is something new. Without `force`, a load less
+than 30 minutes old is left for the next hourly poll, in case the package is
+still running. If either ingest fails it says why in the log, the portal
+keeps showing the previous load of that source, and nothing else is affected.
 
 ## 9. Backup
 
