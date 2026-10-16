@@ -16,6 +16,12 @@
       = render "column_picker", model: Csr::Escalation, columns: columns, param: :escalation_columns, search: search
       = render "export_link", table: "escalations", param: :escalation_columns, columns: columns, search: search
 
+  - columns, same_mpn = screen_columns(escalations, columns)
+  - if same_mpn
+    %p.table-note
+      MPN column hidden — same value (
+      %code>= same_mpn
+      ) on every row. The CSV keeps it.
   .table-wrap
     %table.escalations
       %thead

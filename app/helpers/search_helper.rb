@@ -27,6 +27,16 @@ module SearchHelper
     escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
   ].freeze
 
+  # The columns a table shows on screen: the chosen ones, less an MPN that is
+  # the same on every row, which then reads once above the table. The CSV
+  # export keeps it — it goes through the controller, not here.
+  def screen_columns(records, columns)
+    return [ columns, nil ] unless columns.include?(:mpn) && records.many?
+
+    mpns = records.map(&:mpn).uniq
+    mpns.one? && mpns.first.present? ? [ columns - [ :mpn ], mpns.first ] : [ columns, nil ]
+  end
+
   # One table cell, formatted by what the value is rather than by a list that
   # would have to be kept in step with the column set.
   def column_cell(record, column)
@@ -62,13 +72,16 @@ module SearchHelper
     (line.cdd.to_date - line.pdd.to_date).to_i
   end
 
+  # Severity is never colour alone: the late pill carries a clock as well.
+  RISK_ICON = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.8V8l2.2 1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'.html_safe
+
   # Late / On time follows the miss rule (CDD > PDD). A line with no CDD is
   # unconfirmed, not a risk: its age since the order was created shows how
   # much of the 5 days to confirm is gone.
   def risk_pill(line)
     if line.miss
       days = slip_days(line)
-      tag.span(days.positive? ? "Late +#{days}d" : "Late", class: "pill late")
+      tag.span(safe_join([ RISK_ICON, days.positive? ? "Late +#{days}d" : "Late" ]), class: "pill late")
     elsif line.cdd
       tag.span("On time", class: "pill ok")
     else

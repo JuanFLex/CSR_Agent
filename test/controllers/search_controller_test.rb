@@ -167,4 +167,16 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "details.account .menu a[href=?]", admin_users_path, text: "Users"
     assert_select "details.account .menu a[href=?]", admin_usage_path, text: "Usage"
   end
+
+  test "hides an MPN that is the same on every row, on screen only" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+    assert_select "table.lines thead th", text: "MPN", count: 1, message: "mixed MPNs stay as a column"
+
+    get root_url, params: { search_type: "mpn", value: "MPN-A" }
+    assert_select "table.lines thead th", text: "MPN", count: 0
+    assert_select ".table-note", text: /MPN column hidden — same value \(MPN-A\) on every row/
+
+    get search_url(format: :csv), params: { search_type: "mpn", value: "MPN-A" }
+    assert_includes CSV.parse(response.body).first, "MPN"
+  end
 end
