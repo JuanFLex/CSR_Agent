@@ -112,7 +112,8 @@ td.actions { display: flex; gap: 8px; }
 .source.not-loaded.impact .dot { border-color: var(--amber); }
 
 /* Summary cards */
-.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.cards { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr .8fr; gap: 14px; }
+.card.minor .value { font-size: 24px; }
 .card { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .card .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .card .value { display: flex; align-items: center; gap: 10px; font-size: 34px; font-weight: 700; line-height: 1.1; }

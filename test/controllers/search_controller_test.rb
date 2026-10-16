@@ -18,7 +18,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.lines tbody tr", count: 4
     assert_select "table.keys td.multi", text: /FCS-CPN-100.*FCS-MPN-A/m
     assert_select ".freshness[title=?]", "CSR_OSOR_AMERICAS · snapshot ##{csr_snapshots(:current).id}", text: /OSOR.*Sep 07, 15:38/m
-    assert_select ".cards .card:nth-child(2) .value", text: "2"
+    assert_select ".cards .card:last-child.minor .value", text: "2"
   end
 
   test "marks every source without an active snapshot as not loaded" do

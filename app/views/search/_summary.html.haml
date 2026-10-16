@@ -1,7 +1,8 @@
 -# locals: (summary:)
--# SUMMARY!B4:B9 plus the combo count from E6. Risk is Excel parity: RED when any line has CDD > PDD.
+-# SUMMARY!B4:B9 plus the combo count from E6, ordered by importance. Risk is Excel parity: RED when any line has CDD > PDD.
 - late = summary[:misses].positive?
 %section.cards
+  -# Red or green only: no rule says what is YELLOW yet, so nothing is.
   .card.risk{ class: late ? "red" : "green" }
     %span.label Execution risk
     %span.value
@@ -18,11 +19,6 @@
     %span.note= late ? "#{pluralize(summary[:misses], "late line")} · CDD > PDD" : "no late lines"
 
   .card
-    %span.label Combinations
-    %span.value= summary[:combos_found]
-    %span.note CPN|MPN keys
-
-  .card
     %span.label Open lines
     %span.value= number_with_delimiter(summary[:open_lines])
     %span.note= "#{number_with_delimiter(summary[:open_qty].to_i)} pcs ordered"
@@ -34,3 +30,9 @@
       %span.arrow →
       = short_date(summary[:etd_max])
     %span.note earliest and latest CDD
+
+  -# Least decision-relevant of the four, so last and smaller.
+  .card.minor
+    %span.label Combinations
+    %span.value= summary[:combos_found]
+    %span.note CPN|MPN keys
