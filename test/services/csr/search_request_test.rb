@@ -13,8 +13,9 @@ module Csr
       assert_equal SearchRequest::DEFAULT_TYPE, search.search_type
       assert_equal DEFAULT_REGION, search.region
       assert_equal "CPN-100", search.value
-      assert_equal SearchRequest::MAX_LINES, search.lines.limit_value
+      assert_equal SearchRequest::LINES_PER_PAGE, search.lines.limit_value
       assert_equal 2, search.lines(limit: 2).limit_value
+      assert_equal 4, search.lines(limit: 2, page: 3).offset_value
     end
 
     test "keeps the same snapshot across resolution summary context and lines" do

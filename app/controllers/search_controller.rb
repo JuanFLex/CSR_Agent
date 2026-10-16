@@ -25,16 +25,23 @@ class SearchController < ApplicationController
     @context = @search.context
     @buffer = @search.buffer
     @commit = @search.commit
-    @lines = @search.lines.to_a
+    @pages = (@summary[:open_lines].to_f / Csr::SearchRequest::LINES_PER_PAGE).ceil
+    @page = params[:page].to_i.clamp(1, [ @pages, 1 ].max)
+    @lines = @search.lines(page: @page).to_a
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
     @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
     log_search("search")
   end
 
+  # Open orders, or the escalations with ?table=escalations. Each carries the
+  # columns its table was showing.
   def export_csv
-    send_data lines_csv(chosen_columns(Csr::OsorLine, :line_columns)),
-              filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv"
+    esc = params[:table] == "escalations"
+    model, param = esc ? [ Csr::Escalation, :escalation_columns ] : [ Csr::OsorLine, :line_columns ]
+    records = esc ? @search.escalations : @search.lines(limit: nil)
+    send_data table_csv(model, chosen_columns(model, param), records),
+              filename: "#{esc ? "escalations" : "open-orders"}-#{@search.value.parameterize.presence || "all"}.csv"
     log_search("export")
   end
 
@@ -69,10 +76,10 @@ class SearchController < ApplicationController
   # ponytail: builds the whole CSV in memory — a search is a part number, not a
   # catalogue. Stream it (ActionController::Live) if an export ever gets big
   # enough to notice.
-  def lines_csv(columns)
+  def table_csv(model, columns, records)
     CSV.generate do |csv|
-      csv << columns.map { |column| Csr::OsorLine::COLUMNS[column] }
-      @search.lines(limit: nil).each { |line| csv << columns.map { |column| line.public_send(column) } }
+      csv << columns.map { |column| model::COLUMNS[column] }
+      records.each { |record| csv << columns.map { |column| record.public_send(column) } }
     end
   end
 end

@@ -7,10 +7,33 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
+  KEY_DIMENSION_LABELS = { fpn: "FPN", customer: "Sold-to", site: "Plant" }.freeze
+
+  # Each key and dimension holding more than one value, for the alert over the
+  # keys table: [key, label, values]. Two keys with different FPNs is normal;
+  # one key with two is the conflict.
+  def key_conflicts(keys, context)
+    keys.flat_map do |key|
+      ctx = context[key.id] || {}
+      KEY_DIMENSIONS.filter_map do |dimension|
+        values = Array(ctx[dimension])
+        [ key, KEY_DIMENSION_LABELS.fetch(dimension), values ] if values.many?
+      end
+    end
+  end
+
   # Part numbers, order numbers and references read as codes, not prose.
   MONO_COLUMNS = %i[
     escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
   ].freeze
+
+  # The columns a table shows on screen: on an MPN search every row carries
+  # the searched MPN, so its column says nothing and goes. Exact by
+  # construction, which looking at the rows of one page would not be. The CSV
+  # export keeps it — it goes through the controller, not here.
+  def screen_columns(search, columns)
+    search.search_type == "mpn" ? columns - [ :mpn ] : columns
+  end
 
   # One table cell, formatted by what the value is rather than by a list that
   # would have to be kept in step with the column set.
@@ -47,13 +70,16 @@ module SearchHelper
     (line.cdd.to_date - line.pdd.to_date).to_i
   end
 
+  # Severity is never colour alone: the late pill carries a clock as well.
+  RISK_ICON = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.8V8l2.2 1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'.html_safe
+
   # Late / On time follows the miss rule (CDD > PDD). A line with no CDD is
   # unconfirmed, not a risk: its age since the order was created shows how
   # much of the 5 days to confirm is gone.
   def risk_pill(line)
     if line.miss
       days = slip_days(line)
-      tag.span(days.positive? ? "Late +#{days}d" : "Late", class: "pill late")
+      tag.span(safe_join([ RISK_ICON, days.positive? ? "Late +#{days}d" : "Late" ]), class: "pill late")
     elsif line.cdd
       tag.span("On time", class: "pill ok")
     else

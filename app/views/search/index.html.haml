@@ -5,11 +5,28 @@
     - elsif @search.snapshot.nil?
       %p.warn No OSOR snapshot is active yet. Run the ingest before searching.
     - else
-      .query
-        %p.echo
-          %span.muted= @search.label
-          %code= @search.value
-          %span.muted= "· #{pluralize(@summary[:combos_found], "part key")}"
+      %header.query
+        .title
+          %h1.echo
+            %span.muted= @search.label
+            %code= @search.value
+            %span.muted= "· #{pluralize(@summary[:combos_found], "part key")}"
+          - if (fresh = @search.snapshot.fresh_as_of)
+            %p.refreshed
+              Last refreshed
+              %time{ datetime: fresh.iso8601 }= "#{time_ago_in_words(fresh)} ago"
+              = "· #{fresh.strftime("%b %d, %Y %H:%M")}"
+        - if @summary[:combos_found].positive?
+          .actions
+            -# The page's one primary action: the Summary bullets as an email draft,
+            -# so the card and the email cannot say different things.
+            = mail_to "", class: "button primary",
+                      subject: "CSR supply status: #{@search.label} #{@search.value}",
+                      body: summary_email_body(@search, summary_points(@search, @summary, @context)) do
+              %svg{ width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", "aria-hidden": "true" }
+                %rect{ x: "1.8", y: "3.2", width: "12.4", height: "9.6", rx: "1.6", stroke: "currentColor", "stroke-width": "1.5" }
+                %path{ d: "M2.5 4.2L8 8.6l5.5-4.4", stroke: "currentColor", "stroke-width": "1.5", "stroke-linejoin": "round" }
+              Copy summary to email
         = render "sources", sources: @search.sources
 
       - if @summary[:combos_found].zero?
@@ -21,4 +38,4 @@
           = render "narrative", search: @search, summary: @summary, context: @context
         - if @escalations.any?
           = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
-        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns
+        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages

@@ -17,8 +17,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", count: 2
     assert_select "table.lines tbody tr", count: 4
     assert_select "table.keys td.multi", text: /FCS-CPN-100.*FCS-MPN-A/m
-    assert_select ".freshness", text: /Sep 07, 15:38.*CSR_OSOR_AMERICAS.*##{csr_snapshots(:current).id}/m
-    assert_select ".cards .card:nth-child(2) .value", text: "2"
+    assert_select ".panel .alert.amber li", text: /MPN-A\s*FPN has 2 values \(FCS-CPN-100 · FCS-MPN-A\)\. Confirm with the customer which FPN applies/
+    assert_select ".freshness[title=?]", "CSR_OSOR_AMERICAS · snapshot ##{csr_snapshots(:current).id}", text: /OSOR.*Sep 07, 15:38/m
+    assert_select ".cards .card:last-child.minor .value", text: "2"
   end
 
   test "marks every source without an active snapshot as not loaded" do
@@ -26,13 +27,21 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".sources .source.live", count: 2
     assert_select ".sources .source.not-loaded", count: 3
+    assert_select ".sources .source.not-loaded.impact", text: /Demand.*not loaded.*forecast coverage unavailable/m
+    assert_select ".sources", text: /Retry/, count: 0
+  end
+
+  test "tells how long ago the open orders were refreshed" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select ".query .refreshed", text: /Last refreshed .* ago · Sep 07, \d{4} 15:38/
   end
 
   test "summarizes the search and offers it as an email draft" do
     get root_url, params: { search_type: "cpn", value: "CPN-100" }
 
     assert_select ".narrative li", minimum: 1
-    assert_select ".narrative a[href^='mailto:?'][href*='subject=CSR'][href*='body=CPN']"
+    assert_select ".query .actions a.primary[href^='mailto:?'][href*='subject=CSR'][href*='body=CPN']"
   end
 
   test "lists the open escalations raised against the searched MPNs" do
@@ -86,6 +95,25 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_equal 4, rows.size - 1
   end
 
+  test "exports the escalations with the columns their table was showing" do
+    get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100", table: "escalations",
+                                            escalation_columns: %w[escalation_number owner_name] }
+
+    assert_response :success
+    assert_match(/\Aescalations-cpn-100\.csv/, response.headers["Content-Disposition"][/filename="(.+?)"/, 1])
+    rows = CSV.parse(response.body)
+    assert_equal [ "FET #", "Owner" ], rows.first
+    assert_equal 2, rows.size - 1
+  end
+
+  test "offers the column picker and an export in both tables" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select ".panel-head .tools details.columns summary", text: /Columns · \d+ of \d+/, count: 2
+    assert_select ".panel-head .tools a[href*='table=escalations'][href*='.csv']", text: /Export CSV/
+    assert_select ".panel-head .tools a[href*='table=lines'][href*='.csv']", text: /Export CSV/
+  end
+
   test "the CSV export carries the columns the table was showing" do
     get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100", line_columns: %w[mpn miss] }
 
@@ -105,7 +133,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", text: /MPN-A.*Below target · 0.5×.*at target from Sep 26/m, count: 1
     assert_select "table.keys .pill", count: 1, message: "a key the buffer report does not carry shows no state"
     assert_select ".narrative li", text: /Buffer: 1 of 1 key with a safety stock drops below it \(lowest 0.5×\)/
-    assert_select ".sources .source.live", text: /Buffer.*CS_tempTrendBufferReadinessProjection/m
+    assert_select ".sources .source.live[title^=?]", "CS_tempTrendBufferReadinessProjection", text: /Buffer/
   end
 
   test "shows where each key's commit stands" do
@@ -123,6 +151,77 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", text: /MPN-A.*Short · 43,645.*from Oct 10/m, count: 1
     assert_select "table.keys tbody tr", text: /MPN-B.*Covered/m, count: 1
     assert_select ".narrative li", text: /Commit: 1 of 2 keys runs short of the forecast \(up to 43,645 pcs, from Oct 10\)/
-    assert_select ".sources .source.live", text: /Commit.*CSR_CustomerCommitment/m
+    assert_select ".sources .source.live[title^=?]", "CSR_CustomerCommitment", text: /Commit/
+  end
+
+  test "keeps the admin pages and logout in the account menu" do
+    get root_url
+
+    assert_select "details.account .menu", text: /#{users(:regular).email}/
+    assert_select "details.account .menu button.logout", text: "Log out"
+    assert_select "details.account a", text: "Users", count: 0
+
+    sign_in users(:admin)
+    get root_url
+
+    assert_select "details.account .menu a[href=?]", admin_users_path, text: "Users"
+    assert_select "details.account .menu a[href=?]", admin_usage_path, text: "Usage"
+  end
+
+  test "hides the MPN column on an MPN search, on screen only" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+    assert_select "table.lines thead th", text: "MPN", count: 1
+    assert_select ".table-note", count: 0
+
+    get root_url, params: { search_type: "mpn", value: "MPN-A" }
+    assert_select "table.lines thead th", text: "MPN", count: 0
+    assert_select ".table-note", text: /MPN column hidden — this is an MPN search \(MPN-A\)/
+
+    get search_url(format: :csv), params: { search_type: "mpn", value: "MPN-A" }
+    assert_includes CSV.parse(response.body).first, "MPN"
+  end
+
+  test "pages the open orders and says how many are shown" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+    assert_select ".table-foot", text: /Showing 1–4 of 4 · sorted by ETD \(CDD\)/
+    assert_select ".pager", count: 0
+
+    with_lines_per_page(3) do
+      get root_url, params: { search_type: "cpn", value: "CPN-100", page: 2 }
+    end
+    assert_select "table.lines tbody tr", count: 1
+    assert_select ".table-foot", text: /Showing 4–4 of 4/
+    assert_select ".pager a[href*='page=1']", text: "‹"
+    assert_select ".pager", text: /Page 2 of 2/
+    assert_select ".pager a", text: "›", count: 0
+  end
+
+  test "the pager keeps the MPN in the reader's columns while the table hides it" do
+    with_lines_per_page(1) do
+      get root_url, params: { search_type: "mpn", value: "MPN-A", line_columns: %w[cpo_ref mpn] }
+    end
+
+    assert_select "table.lines thead th", text: "MPN", count: 0
+    assert_select ".pager a[href*='page=2'][href*='line_columns%5B%5D=mpn']", text: "›"
+    assert_equal "cpo_ref,mpn", cookies[:line_columns]
+  end
+
+  test "says there are no open orders instead of counting zero of them" do
+    get root_url, params: { search_type: "mpn", value: "MPN-D" }
+
+    assert_select ".table-foot", text: "No open orders"
+    assert_select ".table-foot", text: /Showing/, count: 0
+  end
+
+  private
+
+  def with_lines_per_page(count)
+    original = Csr::SearchRequest::LINES_PER_PAGE
+    Csr::SearchRequest.send(:remove_const, :LINES_PER_PAGE)
+    Csr::SearchRequest.const_set(:LINES_PER_PAGE, count)
+    yield
+  ensure
+    Csr::SearchRequest.send(:remove_const, :LINES_PER_PAGE)
+    Csr::SearchRequest.const_set(:LINES_PER_PAGE, original)
   end
 end

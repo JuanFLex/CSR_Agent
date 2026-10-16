@@ -15,4 +15,10 @@ class SearchHelperTest < ActionView::TestCase
     assert_includes risk_pill(line), "Unconfirmed +3d"
     assert_includes risk_pill(Csr::OsorLine.new), "Unconfirmed<"
   end
+
+  test "a late line says so with an icon as well as a colour" do
+    line = Csr::OsorLine.new(miss: true, pdd: Time.zone.local(2026, 9, 1), cdd: Time.zone.local(2026, 9, 8))
+
+    assert_match(/class="pill late"><svg.*Late \+7d/, risk_pill(line))
+  end
 end

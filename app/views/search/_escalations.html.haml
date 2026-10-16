@@ -12,25 +12,29 @@
       %span.multi-hint
         %span.pill.late>Line down
         = pluralize(down, "escalation")
+    .tools
+      = render "column_picker", model: Csr::Escalation, columns: columns, param: :escalation_columns, search: search
+      = render "export_link", table: "escalations", param: :escalation_columns, columns: columns, search: search
 
-  = render "column_picker", model: Csr::Escalation, columns: columns, param: :escalation_columns, search: search
-
-  %table.escalations
-    %thead
-      %tr
-        - columns.each do |column|
-          %th{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= Csr::Escalation::COLUMNS[column]
-        %th Flags
-    %tbody
-      - escalations.each do |escalation|
-        %tr{ class: ("miss" if escalation.line_down?) }
-          - columns.each do |column|
-            %td{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= column_cell(escalation, column)
-          %td
-            %span.pill.tier= Csr::Escalation.tier(search.need_dates[escalation.fpn])
-            - unless search.need_dates.key?(escalation.fpn)
-              %span.pill.unconfirmed No orders
-            - if escalation.line_down?
-              %span.pill.late Line down
-            - if escalation.item_on_allocation == "Y"
-              %span.pill.unconfirmed Allocation
+  - shown = screen_columns(search, columns)
+  = render "mpn_note", search: search if shown != columns
+  .table-wrap
+    %table.escalations
+      %thead
+        %tr
+          - shown.each do |column|
+            %th{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= Csr::Escalation::COLUMNS[column]
+          %th Flags
+      %tbody
+        - escalations.each do |escalation|
+          %tr{ class: ("miss" if escalation.line_down?) }
+            - shown.each do |column|
+              %td{ class: ("num" if Csr::Escalation.numeric_column?(column)) }= column_cell(escalation, column)
+            %td
+              %span.pill.tier= Csr::Escalation.tier(search.need_dates[escalation.fpn])
+              - unless search.need_dates.key?(escalation.fpn)
+                %span.pill.unconfirmed No orders
+              - if escalation.line_down?
+                %span.pill.late Line down
+              - if escalation.item_on_allocation == "Y"
+                %span.pill.unconfirmed Allocation

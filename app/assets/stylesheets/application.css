@@ -31,13 +31,23 @@ body {
 code { font-family: var(--mono); font-size: 12px; }
 .muted { color: var(--muted); }
 
-/* Top bar. No sidebar, avatar or bell — just the signed-in email and, for
-   admins, links to Users and Usage. */
+/* Top bar. No sidebar or bell — the account menu holds the signed-in email,
+   Logout and, for admins, Users and Usage. */
 .topbar { display: flex; align-items: center; gap: 28px; height: 64px; padding: 0 32px; background: var(--nav); color: #fff; }
 .brand { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 17px; font-weight: 600; white-space: nowrap; }
 .brand .region { padding-left: 12px; border-left: 1px solid #33445c; color: var(--accent-soft); font-size: 15px; font-weight: 400; }
-.topbar .account { display: flex; align-items: center; gap: 14px; margin-left: auto; font-size: 13px; white-space: nowrap; }
-.topbar .account .muted { color: var(--accent-soft); }
+.topbar .account { position: relative; margin-left: auto; font-size: 13px; white-space: nowrap; }
+.account summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+.account summary::-webkit-details-marker { display: none; }
+.account summary::after { content: "▾"; color: var(--accent-soft); }
+.account .avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); font-weight: 700; }
+.account .menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 10; display: flex; flex-direction: column; min-width: 220px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); box-shadow: 0 8px 24px -8px rgba(14, 26, 43, .35); }
+.account .menu > * { padding: 8px 10px; }
+.account .menu .muted { border-bottom: 1px solid var(--line); }
+.account .menu a { color: var(--ink); text-decoration: none; border-radius: 5px; }
+.account .menu a:hover, .account .menu .logout:hover { background: var(--bg); }
+.account .menu form { padding: 0; }
+.account .menu .logout { width: 100%; padding: 8px 10px; border: 0; border-radius: 5px; background: none; color: var(--red-ink); font: inherit; text-align: left; cursor: pointer; }
 
 .page-flash { margin: 0; padding: 10px 32px; font-size: 13px; }
 .page-flash.notice { background: var(--green-bg); color: var(--green); }
@@ -79,22 +89,31 @@ code { font-family: var(--mono); font-size: 12px; }
 .page.stack { display: flex; flex-direction: column; gap: 18px; }
 td.actions { display: flex; gap: 8px; }
 
-.query { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
-.echo { margin: 0; font-size: 18px; }
-.echo code { font-size: 16px; font-weight: 600; }
+/* Page header: what was searched and how fresh it is, the page actions on the
+   right, the sources underneath. */
+.query { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+.query .title { display: flex; flex-direction: column; gap: 2px; }
+.query .actions { display: flex; gap: 8px; }
+.query .sources { flex-basis: 100%; }
+.echo { margin: 0; font-size: 20px; font-weight: 400; }
+.echo code { font-size: 19px; font-weight: 700; }
+.refreshed { margin: 0; color: var(--muted); font-size: 12.5px; }
 
 /* Freshness per source: OSOR reloads twice a day, the weekly files do not. */
-.sources { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
-.source { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 14px; }
-.source code { font-size: 11px; }
+.sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.sources-label { margin-right: 2px; color: var(--muted); }
+.source { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 12px; }
 .source .dot { width: 8px; height: 8px; border-radius: 50%; }
 .source.live { background: var(--card); border: 1px solid #bfe3cd; }
 .source.live .dot { background: var(--green); }
 .source.not-loaded { border: 1px dashed #c9d2dd; color: #7d8a9b; }
 .source.not-loaded .dot { border: 1.5px solid #aab5c3; }
+.source.not-loaded.impact { border: 1px solid #f0d58a; background: var(--amber-bg); color: #7a5600; }
+.source.not-loaded.impact .dot { border-color: var(--amber); }
 
 /* Summary cards */
-.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.cards { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr .8fr; gap: 14px; }
+.card.minor .value { font-size: 24px; }
 .card { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .card .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .card .value { display: flex; align-items: center; gap: 10px; font-size: 34px; font-weight: 700; line-height: 1.1; }
@@ -108,17 +127,22 @@ td.actions { display: flex; gap: 8px; }
 
 /* Panels */
 .split { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-.panel { border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: auto; }
+.panel { border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
 h2 { margin: 0; font-size: 15px; font-weight: 600; }
 h2 .count { color: var(--muted); font-weight: 400; }
 .multi-hint { display: inline-flex; align-items: center; gap: 6px; color: #8a6400; font-size: 12px; }
 .multi-hint .swatch { width: 14px; height: 14px; border: 1px solid #f0d58a; border-radius: 3px; background: var(--amber-bg); }
 
+.alert { display: flex; gap: 10px; margin: 0 16px 12px; padding: 10px 12px; border-radius: 7px; font-size: 13px; }
+.alert svg { flex: none; margin-top: 2px; }
+.alert ul { margin: 0; padding: 0; list-style: none; }
+.alert.amber { border: 1px solid #f0d58a; background: var(--amber-bg); color: #6b4c00; }
+
 .narrative { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; }
 .narrative ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 18px; font-size: 13.5px; text-wrap: pretty; }
 .narrative .bad { color: var(--red-ink); }
-.narrative .button { align-self: flex-start; }
 
 .button { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border: 1px solid #cdd6e1; border-radius: 7px; background: var(--card); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
 .button:hover { border-color: #aab5c3; }
@@ -131,7 +155,6 @@ th { padding: 9px 12px; border-top: 1px solid var(--line); border-bottom: 1px so
 td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
 tbody tr:last-child td { border-bottom: 0; }
 th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
-tr.miss td { background: #fff5f4; }
 tr.miss td:first-child { box-shadow: inset 3px 0 0 var(--red); }
 
 /* A cell holding more than one value is a place the Excel would have silently
@@ -141,16 +164,28 @@ table.keys td:first-child span { white-space: nowrap; }
 table.keys .since { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px; background: var(--amber); color: #fff; font-size: 11px; font-weight: 700; }
 
-.columns { border-bottom: 1px solid var(--line); font-size: 13px; }
-.columns summary { padding: 0 16px 12px; color: var(--accent); cursor: pointer; }
-.columns .column-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 0 16px 14px; }
+.panel-head .tools { display: flex; gap: 8px; margin-left: auto; }
+.columns { position: relative; font-size: 13px; }
+.columns summary { list-style: none; cursor: pointer; }
+.columns summary::-webkit-details-marker { display: none; }
+.columns .column-picker { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: min(620px, 80vw); padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); box-shadow: 0 8px 24px -8px rgba(14, 26, 43, .3); }
 .columns .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 16px; width: 100%; }
 .columns label { display: flex; align-items: center; gap: 6px; }
 
 table.escalations td:first-child, table.escalations td:nth-child(2) { white-space: nowrap; }
 .multi-hint .pill { margin-right: 2px; }
 
-.pill { display: inline-flex; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.table-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12.5px; }
+.pager { display: flex; gap: 4px; }
+.pager .button { height: 28px; min-width: 28px; justify-content: center; padding: 0 8px; }
+.pager { align-items: center; }
+/* Long tables keep their header and the order reference in view. */
+.table-wrap { max-height: 70vh; overflow: auto; }
+.table-wrap thead th { position: sticky; top: 0; z-index: 2; }
+table.lines td:first-child, table.lines th:first-child { position: sticky; left: 0; z-index: 1; background: var(--card); }
+table.lines th:first-child { z-index: 3; background: #f8fafc; }
+.table-note { margin: 0; padding: 0 16px 10px; color: var(--muted); font-size: 12.5px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .pill.late { background: var(--red-bg); color: var(--red-ink); }
 .pill.ok { background: var(--green-bg); color: var(--green); }
 .pill.unconfirmed { background: #eef1f5; color: #5b6878; }
