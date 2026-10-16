@@ -1,11 +1,11 @@
--# locals: (lines:, summary:, search:, columns:)
+-# locals: (lines:, summary:, search:, columns:, page:)
 -# The default set answers "is this order going to land on time". Everything
 -# tOSOR shows is one checkbox away — see _column_picker.
 %section.panel
   %header.panel-head
     %h2
       Open orders
-      %span.count= "(#{number_with_delimiter(lines.size)}#{" of #{number_with_delimiter(summary[:open_lines])}" if lines.size < summary[:open_lines]})"
+      %span.count= "(#{number_with_delimiter(summary[:open_lines])})"
     .tools
       = render "column_picker", model: Csr::OsorLine, columns: columns, param: :line_columns, search: search
       = render "export_link", table: "lines", param: :line_columns, columns: columns, search: search
@@ -29,3 +29,20 @@
             - columns.each do |column|
               %td{ class: ("num" if Csr::OsorLine.numeric_column?(column)) }= column_cell(line, column)
             %td= risk_pill(line)
+  -# Pages ride in the URL like the columns do; the export is never paged.
+  - per_page = Csr::SearchRequest::LINES_PER_PAGE
+  - pages = (summary[:open_lines].to_f / per_page).ceil
+  - first = (page - 1) * per_page + 1
+  %footer.table-foot
+    %span.muted
+      = "Showing #{number_with_delimiter(first)}–#{number_with_delimiter(first + lines.size - 1)} of #{number_with_delimiter(summary[:open_lines])}"
+      · sorted by ETD (CDD), earliest first
+    - if pages > 1
+      %nav.pager{ "aria-label": "Open orders pages" }
+        - pager_pages(page, pages).each do |number|
+          - if number.nil?
+            %span.gap …
+          - elsif number == page
+            %span.button.current{ "aria-current": "page" }= number
+          - else
+            = link_to number, root_path(search_type: search.search_type, value: search.value, region: search.region, line_columns: columns, page: number), class: "button"

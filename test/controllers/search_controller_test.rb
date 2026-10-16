@@ -179,4 +179,30 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url(format: :csv), params: { search_type: "mpn", value: "MPN-A" }
     assert_includes CSV.parse(response.body).first, "MPN"
   end
+
+  test "pages the open orders and says how many are shown" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+    assert_select ".table-foot", text: /Showing 1–4 of 4 · sorted by ETD \(CDD\)/
+    assert_select ".pager", count: 0
+
+    with_lines_per_page(3) do
+      get root_url, params: { search_type: "cpn", value: "CPN-100", page: 2 }
+    end
+    assert_select "table.lines tbody tr", count: 1
+    assert_select ".table-foot", text: /Showing 4–4 of 4/
+    assert_select ".pager a[href*='page=1']", text: "1"
+    assert_select ".pager .current", text: "2"
+  end
+
+  private
+
+  def with_lines_per_page(count)
+    original = Csr::SearchRequest::LINES_PER_PAGE
+    Csr::SearchRequest.send(:remove_const, :LINES_PER_PAGE)
+    Csr::SearchRequest.const_set(:LINES_PER_PAGE, count)
+    yield
+  ensure
+    Csr::SearchRequest.send(:remove_const, :LINES_PER_PAGE)
+    Csr::SearchRequest.const_set(:LINES_PER_PAGE, original)
+  end
 end

@@ -21,4 +21,10 @@ class SearchHelperTest < ActionView::TestCase
 
     assert_match(/class="pill late"><svg.*Late \+7d/, risk_pill(line))
   end
+
+  test "the pager shows the ends and the current page's neighbours" do
+    assert_equal [ 1, 2, 3, nil, 8 ], pager_pages(2, 8)
+    assert_equal [ 1, nil, 4, 5, 6, nil, 8 ], pager_pages(5, 8)
+    assert_equal [ 1 ], pager_pages(1, 1)
+  end
 end

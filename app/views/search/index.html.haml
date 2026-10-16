@@ -30,4 +30,4 @@
           = render "narrative", search: @search, summary: @summary, context: @context
         - if @escalations.any?
           = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
-        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns
+        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page

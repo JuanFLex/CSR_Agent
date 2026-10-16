@@ -37,6 +37,13 @@ module SearchHelper
     mpns.one? && mpns.first.present? ? [ columns - [ :mpn ], mpns.first ] : [ columns, nil ]
   end
 
+  # The page numbers a pager shows: the first, the last and the current one's
+  # neighbours, nil where a run is skipped.
+  def pager_pages(page, pages)
+    shown = [ 1, pages, *(page - 1..page + 1) ].select { |n| n.between?(1, pages) }.uniq.sort
+    shown.each_cons(2).flat_map { |a, b| b - a > 1 ? [ a, nil ] : [ a ] } + [ shown.last ]
+  end
+
   # One table cell, formatted by what the value is rather than by a list that
   # would have to be kept in step with the column set.
   def column_cell(record, column)
