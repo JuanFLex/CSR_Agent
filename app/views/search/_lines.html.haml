@@ -6,24 +6,20 @@
     %h2
       Open orders
       %span.count= "(#{number_with_delimiter(lines.size)}#{" of #{number_with_delimiter(summary[:open_lines])}" if lines.size < summary[:open_lines]})"
-    -# turbo: false — a link inside the frame would otherwise try to render the CSV into it.
-    = link_to search_path(format: :csv, search_type: search.search_type, value: search.value, region: search.region, line_columns: columns),
-              class: "button", download: "", data: { turbo: false } do
-      %svg{ width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", "aria-hidden": "true" }
-        %path{ d: "M8 2v8M4.5 6.8L8 10.2l3.5-3.4M2.5 13.5h11", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round" }
-      Export CSV
+    .tools
+      = render "column_picker", model: Csr::OsorLine, columns: columns, param: :line_columns, search: search
+      = render "export_link", table: "lines", param: :line_columns, columns: columns, search: search
 
-  = render "column_picker", model: Csr::OsorLine, columns: columns, param: :line_columns, search: search
-
-  %table.lines
-    %thead
-      %tr
-        - columns.each do |column|
-          %th{ class: ("num" if Csr::OsorLine.numeric_column?(column)) }= Csr::OsorLine::COLUMNS[column]
-        %th Risk
-    %tbody
-      - lines.each do |line|
-        %tr{ class: ("miss" if line.miss) }
+  .table-wrap
+    %table.lines
+      %thead
+        %tr
           - columns.each do |column|
-            %td{ class: ("num" if Csr::OsorLine.numeric_column?(column)) }= column_cell(line, column)
-          %td= risk_pill(line)
+            %th{ class: ("num" if Csr::OsorLine.numeric_column?(column)) }= Csr::OsorLine::COLUMNS[column]
+          %th Risk
+      %tbody
+        - lines.each do |line|
+          %tr{ class: ("miss" if line.miss) }
+            - columns.each do |column|
+              %td{ class: ("num" if Csr::OsorLine.numeric_column?(column)) }= column_cell(line, column)
+            %td= risk_pill(line)

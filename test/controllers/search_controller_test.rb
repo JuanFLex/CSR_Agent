@@ -95,6 +95,25 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_equal 4, rows.size - 1
   end
 
+  test "exports the escalations with the columns their table was showing" do
+    get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100", table: "escalations",
+                                            escalation_columns: %w[escalation_number owner_name] }
+
+    assert_response :success
+    assert_match(/\Aescalations-cpn-100\.csv/, response.headers["Content-Disposition"][/filename="(.+?)"/, 1])
+    rows = CSV.parse(response.body)
+    assert_equal [ "FET #", "Owner" ], rows.first
+    assert_equal 2, rows.size - 1
+  end
+
+  test "offers the column picker and an export in both tables" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select ".panel-head .tools details.columns summary", text: /Columns · \d+ of \d+/, count: 2
+    assert_select ".panel-head .tools a[href*='table=escalations'][href*='.csv']", text: /Export CSV/
+    assert_select ".panel-head .tools a[href*='table=lines'][href*='.csv']", text: /Export CSV/
+  end
+
   test "the CSV export carries the columns the table was showing" do
     get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100", line_columns: %w[mpn miss] }
 

@@ -32,9 +32,20 @@ class SearchController < ApplicationController
     log_search("search")
   end
 
+  # One export per table, picked by ?table=; Open orders unless it says
+  # escalations. Each carries the columns its table was showing.
+  EXPORTS = {
+    "lines"       => [ Csr::OsorLine, :line_columns, "open-orders" ],
+    "escalations" => [ Csr::Escalation, :escalation_columns, "escalations" ]
+  }.freeze
+
   def export_csv
-    send_data lines_csv(chosen_columns(Csr::OsorLine, :line_columns)),
-              filename: "open-orders-#{@search.value.parameterize.presence || "all"}.csv"
+    table = EXPORTS.key?(params[:table]) ? params[:table] : "lines"
+    model, param, name = EXPORTS.fetch(table)
+    records = table == "escalations" ? @search.escalations : @search.lines(limit: nil)
+
+    send_data table_csv(model, chosen_columns(model, param), records),
+              filename: "#{name}-#{@search.value.parameterize.presence || "all"}.csv"
     log_search("export")
   end
 
@@ -69,10 +80,10 @@ class SearchController < ApplicationController
   # ponytail: builds the whole CSV in memory — a search is a part number, not a
   # catalogue. Stream it (ActionController::Live) if an export ever gets big
   # enough to notice.
-  def lines_csv(columns)
+  def table_csv(model, columns, records)
     CSV.generate do |csv|
-      csv << columns.map { |column| Csr::OsorLine::COLUMNS[column] }
-      @search.lines(limit: nil).each { |line| csv << columns.map { |column| line.public_send(column) } }
+      csv << columns.map { |column| model::COLUMNS[column] }
+      records.each { |record| csv << columns.map { |column| record.public_send(column) } }
     end
   end
 end
