@@ -27,21 +27,12 @@ module SearchHelper
     escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
   ].freeze
 
-  # The columns a table shows on screen: the chosen ones, less an MPN that is
-  # the same on every row, which then reads once above the table. The CSV
+  # The columns a table shows on screen: on an MPN search every row carries
+  # the searched MPN, so its column says nothing and goes. Exact by
+  # construction, which looking at the rows of one page would not be. The CSV
   # export keeps it — it goes through the controller, not here.
-  def screen_columns(records, columns)
-    return [ columns, nil ] unless columns.include?(:mpn) && records.many?
-
-    mpns = records.map(&:mpn).uniq
-    mpns.one? && mpns.first.present? ? [ columns - [ :mpn ], mpns.first ] : [ columns, nil ]
-  end
-
-  # The page numbers a pager shows: the first, the last and the current one's
-  # neighbours, nil where a run is skipped.
-  def pager_pages(page, pages)
-    shown = [ 1, pages, *(page - 1..page + 1) ].select { |n| n.between?(1, pages) }.uniq.sort
-    shown.each_cons(2).flat_map { |a, b| b - a > 1 ? [ a, nil ] : [ a ] } + [ shown.last ]
+  def screen_columns(search, columns)
+    search.search_type == "mpn" ? columns - [ :mpn ] : columns
   end
 
   # One table cell, formatted by what the value is rather than by a list that

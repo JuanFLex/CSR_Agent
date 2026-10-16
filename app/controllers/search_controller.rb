@@ -25,8 +25,8 @@ class SearchController < ApplicationController
     @context = @search.context
     @buffer = @search.buffer
     @commit = @search.commit
-    pages = [ (@summary[:open_lines].to_f / Csr::SearchRequest::LINES_PER_PAGE).ceil, 1 ].max
-    @page = params[:page].to_i.clamp(1, pages)
+    @pages = (@summary[:open_lines].to_f / Csr::SearchRequest::LINES_PER_PAGE).ceil
+    @page = params[:page].to_i.clamp(1, [ @pages, 1 ].max)
     @lines = @search.lines(page: @page).to_a
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)

@@ -178,8 +178,7 @@ table.escalations td:first-child, table.escalations td:nth-child(2) { white-spac
 .table-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12.5px; }
 .pager { display: flex; gap: 4px; }
 .pager .button { height: 28px; min-width: 28px; justify-content: center; padding: 0 8px; }
-.pager .button.current { border-color: var(--accent); background: var(--accent); color: #fff; }
-.pager .gap { align-self: center; color: var(--muted); }
+.pager { align-items: center; }
 /* Long tables keep their header and the order reference in view. */
 .table-wrap { max-height: 70vh; overflow: auto; }
 .table-wrap thead th { position: sticky; top: 0; z-index: 2; }

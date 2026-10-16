@@ -168,13 +168,14 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "details.account .menu a[href=?]", admin_usage_path, text: "Usage"
   end
 
-  test "hides an MPN that is the same on every row, on screen only" do
+  test "hides the MPN column on an MPN search, on screen only" do
     get root_url, params: { search_type: "cpn", value: "CPN-100" }
-    assert_select "table.lines thead th", text: "MPN", count: 1, message: "mixed MPNs stay as a column"
+    assert_select "table.lines thead th", text: "MPN", count: 1
+    assert_select ".table-note", count: 0
 
     get root_url, params: { search_type: "mpn", value: "MPN-A" }
     assert_select "table.lines thead th", text: "MPN", count: 0
-    assert_select ".table-note", text: /MPN column hidden — same value \(MPN-A\) on every row/
+    assert_select ".table-note", text: /MPN column hidden — this is an MPN search \(MPN-A\)/
 
     get search_url(format: :csv), params: { search_type: "mpn", value: "MPN-A" }
     assert_includes CSV.parse(response.body).first, "MPN"
@@ -190,8 +191,26 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     end
     assert_select "table.lines tbody tr", count: 1
     assert_select ".table-foot", text: /Showing 4–4 of 4/
-    assert_select ".pager a[href*='page=1']", text: "1"
-    assert_select ".pager .current", text: "2"
+    assert_select ".pager a[href*='page=1']", text: "‹"
+    assert_select ".pager", text: /Page 2 of 2/
+    assert_select ".pager a", text: "›", count: 0
+  end
+
+  test "the pager keeps the MPN in the reader's columns while the table hides it" do
+    with_lines_per_page(1) do
+      get root_url, params: { search_type: "mpn", value: "MPN-A", line_columns: %w[cpo_ref mpn] }
+    end
+
+    assert_select "table.lines thead th", text: "MPN", count: 0
+    assert_select ".pager a[href*='page=2'][href*='line_columns%5B%5D=mpn']", text: "›"
+    assert_equal "cpo_ref,mpn", cookies[:line_columns]
+  end
+
+  test "says there are no open orders instead of counting zero of them" do
+    get root_url, params: { search_type: "mpn", value: "MPN-D" }
+
+    assert_select ".table-foot", text: "No open orders"
+    assert_select ".table-foot", text: /Showing/, count: 0
   end
 
   private
