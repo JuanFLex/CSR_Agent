@@ -31,13 +31,23 @@ body {
 code { font-family: var(--mono); font-size: 12px; }
 .muted { color: var(--muted); }
 
-/* Top bar. No sidebar, avatar or bell — just the signed-in email and, for
-   admins, links to Users and Usage. */
+/* Top bar. No sidebar or bell — the account menu holds the signed-in email,
+   Logout and, for admins, Users and Usage. */
 .topbar { display: flex; align-items: center; gap: 28px; height: 64px; padding: 0 32px; background: var(--nav); color: #fff; }
 .brand { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 17px; font-weight: 600; white-space: nowrap; }
 .brand .region { padding-left: 12px; border-left: 1px solid #33445c; color: var(--accent-soft); font-size: 15px; font-weight: 400; }
-.topbar .account { display: flex; align-items: center; gap: 14px; margin-left: auto; font-size: 13px; white-space: nowrap; }
-.topbar .account .muted { color: var(--accent-soft); }
+.topbar .account { position: relative; margin-left: auto; font-size: 13px; white-space: nowrap; }
+.account summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+.account summary::-webkit-details-marker { display: none; }
+.account summary::after { content: "▾"; color: var(--accent-soft); }
+.account .avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); font-weight: 700; }
+.account .menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 10; display: flex; flex-direction: column; min-width: 220px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); box-shadow: 0 8px 24px -8px rgba(14, 26, 43, .35); }
+.account .menu > * { padding: 8px 10px; }
+.account .menu .muted { border-bottom: 1px solid var(--line); }
+.account .menu a { color: var(--ink); text-decoration: none; border-radius: 5px; }
+.account .menu a:hover, .account .menu .logout:hover { background: var(--bg); }
+.account .menu form { padding: 0; }
+.account .menu .logout { width: 100%; padding: 8px 10px; border: 0; border-radius: 5px; background: none; color: var(--red-ink); font: inherit; text-align: left; cursor: pointer; }
 
 .page-flash { margin: 0; padding: 10px 32px; font-size: 13px; }
 .page-flash.notice { background: var(--green-bg); color: var(--green); }

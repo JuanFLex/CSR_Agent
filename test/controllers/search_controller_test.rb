@@ -125,4 +125,18 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select ".narrative li", text: /Commit: 1 of 2 keys runs short of the forecast \(up to 43,645 pcs, from Oct 10\)/
     assert_select ".sources .source.live", text: /Commit.*CSR_CustomerCommitment/m
   end
+
+  test "keeps the admin pages and logout in the account menu" do
+    get root_url
+
+    assert_select "details.account .menu", text: /#{users(:regular).email}/
+    assert_select "details.account .menu button.logout", text: "Log out"
+    assert_select "details.account a", text: "Users", count: 0
+
+    sign_in users(:admin)
+    get root_url
+
+    assert_select "details.account .menu a[href=?]", admin_users_path, text: "Users"
+    assert_select "details.account .menu a[href=?]", admin_usage_path, text: "Usage"
+  end
 end

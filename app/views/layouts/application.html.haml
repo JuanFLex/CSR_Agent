@@ -47,12 +47,19 @@
               %path{ d: "M10.6 10.6L14 14", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round" }
             Search
 
-        .account
-          - if current_user.has_role?(:admin)
-            = link_to "Users", admin_users_path, class: "button"
-            = link_to "Usage", admin_usage_path, class: "button"
-          %span.muted= current_user.email
-          = button_to "Log out", destroy_user_session_path, method: :delete, class: "button"
+        -# Users and Usage are admin pages, not views of the data: they live in
+        -# the account menu, beside the only other account action. A <details>
+        -# opens it without JS.
+        %details.account
+          %summary
+            %span.avatar{ "aria-hidden": "true" }= current_user.email.first.upcase
+            = current_user.email
+          .menu
+            %span.muted= current_user.email
+            - if current_user.has_role?(:admin)
+              = link_to "Users", admin_users_path
+              = link_to "Usage", admin_usage_path
+            = button_to "Log out", destroy_user_session_path, method: :delete, class: "logout"
 
     - if notice.present?
       %p.page-flash.notice= notice
