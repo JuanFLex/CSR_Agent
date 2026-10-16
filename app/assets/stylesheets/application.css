@@ -89,9 +89,15 @@ code { font-family: var(--mono); font-size: 12px; }
 .page.stack { display: flex; flex-direction: column; gap: 18px; }
 td.actions { display: flex; gap: 8px; }
 
-.query { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
-.echo { margin: 0; font-size: 18px; }
-.echo code { font-size: 16px; font-weight: 600; }
+/* Page header: what was searched and how fresh it is, the page actions on the
+   right, the sources underneath. */
+.query { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+.query .title { display: flex; flex-direction: column; gap: 2px; }
+.query .actions { display: flex; gap: 8px; }
+.query .sources { flex-basis: 100%; }
+.echo { margin: 0; font-size: 20px; font-weight: 400; }
+.echo code { font-size: 19px; font-weight: 700; }
+.refreshed { margin: 0; color: var(--muted); font-size: 12.5px; }
 
 /* Freshness per source: OSOR reloads twice a day, the weekly files do not. */
 .sources { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
@@ -128,7 +134,6 @@ h2 .count { color: var(--muted); font-weight: 400; }
 .narrative { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; }
 .narrative ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 18px; font-size: 13.5px; text-wrap: pretty; }
 .narrative .bad { color: var(--red-ink); }
-.narrative .button { align-self: flex-start; }
 
 .button { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border: 1px solid #cdd6e1; border-radius: 7px; background: var(--card); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
 .button:hover { border-color: #aab5c3; }

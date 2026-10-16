@@ -28,11 +28,17 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select ".sources .source.not-loaded", count: 3
   end
 
+  test "tells how long ago the open orders were refreshed" do
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select ".query .refreshed", text: /Last refreshed .* ago · Sep 07, \d{4} 15:38/
+  end
+
   test "summarizes the search and offers it as an email draft" do
     get root_url, params: { search_type: "cpn", value: "CPN-100" }
 
     assert_select ".narrative li", minimum: 1
-    assert_select ".narrative a[href^='mailto:?'][href*='subject=CSR'][href*='body=CPN']"
+    assert_select ".query .actions a.primary[href^='mailto:?'][href*='subject=CSR'][href*='body=CPN']"
   end
 
   test "lists the open escalations raised against the searched MPNs" do

@@ -5,11 +5,20 @@
     - elsif @search.snapshot.nil?
       %p.warn No OSOR snapshot is active yet. Run the ingest before searching.
     - else
-      .query
-        %p.echo
-          %span.muted= @search.label
-          %code= @search.value
-          %span.muted= "· #{pluralize(@summary[:combos_found], "part key")}"
+      %header.query
+        .title
+          %h1.echo
+            %span.muted= @search.label
+            %code= @search.value
+            %span.muted= "· #{pluralize(@summary[:combos_found], "part key")}"
+          - if (fresh = @search.snapshot.fresh_as_of)
+            %p.refreshed
+              Last refreshed
+              %time{ datetime: fresh.iso8601 }= "#{time_ago_in_words(fresh)} ago"
+              = "· #{fresh.strftime("%b %d, %Y %H:%M")}"
+        - if @summary[:combos_found].positive?
+          .actions
+            = render "copy_summary", search: @search, summary: @summary, context: @context
         = render "sources", sources: @search.sources
 
       - if @summary[:combos_found].zero?
