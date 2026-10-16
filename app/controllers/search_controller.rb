@@ -34,20 +34,14 @@ class SearchController < ApplicationController
     log_search("search")
   end
 
-  # One export per table, picked by ?table=; Open orders unless it says
-  # escalations. Each carries the columns its table was showing.
-  EXPORTS = {
-    "lines"       => [ Csr::OsorLine, :line_columns, "open-orders" ],
-    "escalations" => [ Csr::Escalation, :escalation_columns, "escalations" ]
-  }.freeze
-
+  # Open orders, or the escalations with ?table=escalations. Each carries the
+  # columns its table was showing.
   def export_csv
-    table = EXPORTS.key?(params[:table]) ? params[:table] : "lines"
-    model, param, name = EXPORTS.fetch(table)
-    records = table == "escalations" ? @search.escalations : @search.lines(limit: nil)
-
+    esc = params[:table] == "escalations"
+    model, param = esc ? [ Csr::Escalation, :escalation_columns ] : [ Csr::OsorLine, :line_columns ]
+    records = esc ? @search.escalations : @search.lines(limit: nil)
     send_data table_csv(model, chosen_columns(model, param), records),
-              filename: "#{name}-#{@search.value.parameterize.presence || "all"}.csv"
+              filename: "#{esc ? "escalations" : "open-orders"}-#{@search.value.parameterize.presence || "all"}.csv"
     log_search("export")
   end
 

@@ -1,8 +1,8 @@
 -# locals: (sources:)
 -# One compact chip per source: its name and when it was fresh. The table it
 -# came from and the snapshot id are for whoever is debugging, so they sit in
--# the tooltip. A source never loaded says so, and says what that leaves out
--# where it is known. No retry: the loads run in the ETL, not from here.
+-# the tooltip. A source never loaded says so, and Demand says what that leaves
+-# out. No retry: the loads run in the ETL, not from here.
 %ul.sources{ "aria-label": "Data sources" }
   %li.sources-label Data sources
   - sources.each do |type, snapshot|
@@ -11,10 +11,13 @@
         %span.dot>
         %strong= t("sources.#{type}")
         = snapshot.fresh_as_of&.strftime("%b %d, %H:%M") || "—"
+    - elsif type == "demand"
+      %li.source.not-loaded.impact
+        %span.dot>
+        %strong= t("sources.#{type}")
+        not loaded — forecast coverage unavailable
     - else
-      %li.source.not-loaded{ class: ("impact" if (impact = t("sources.missing_impact.#{type}", default: nil))) }
+      %li.source.not-loaded
         %span.dot>
         %strong= t("sources.#{type}")
         not loaded
-        - if impact
-          = "— #{impact}"
