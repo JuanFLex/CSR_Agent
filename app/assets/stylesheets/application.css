@@ -134,6 +134,11 @@ h2 .count { color: var(--muted); font-weight: 400; }
 .multi-hint { display: inline-flex; align-items: center; gap: 6px; color: #8a6400; font-size: 12px; }
 .multi-hint .swatch { width: 14px; height: 14px; border: 1px solid #f0d58a; border-radius: 3px; background: var(--amber-bg); }
 
+.alert { display: flex; gap: 10px; margin: 0 16px 12px; padding: 10px 12px; border-radius: 7px; font-size: 13px; }
+.alert svg { flex: none; margin-top: 2px; }
+.alert ul { margin: 0; padding: 0; list-style: none; }
+.alert.amber { border: 1px solid #f0d58a; background: var(--amber-bg); color: #6b4c00; }
+
 .narrative { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; }
 .narrative ul { display: flex; flex-direction: column; gap: 8px; margin: 0; padding-left: 18px; font-size: 13.5px; text-wrap: pretty; }
 .narrative .bad { color: var(--red-ink); }

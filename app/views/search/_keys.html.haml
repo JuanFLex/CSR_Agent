@@ -9,10 +9,21 @@
     %h2
       Part keys
       %span.count= "(#{keys.size})"
-    - if context.any? { |_id, ctx| spans_many?(ctx) }
-      %span.multi-hint
-        %span.swatch>
-        More than one value — check which one the customer means
+  -# The amber cell alone is a colour; the alert says what it means.
+  - conflicts = key_conflicts(keys, context)
+  - if conflicts.any?
+    .alert.amber{ role: "status" }
+      %svg{ width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true" }
+        %path{ d: "M12 3.5L2.8 19.5h18.4L12 3.5z", stroke: "currentColor", "stroke-width": "2", "stroke-linejoin": "round" }
+        %path{ d: "M12 10v4.2", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round" }
+        %circle{ cx: "12", cy: "17", r: "1.2", fill: "currentColor" }
+      %ul
+        - conflicts.each do |key, label, values|
+          %li
+            - if keys.many?
+              = key_code(key)
+            %strong= "#{label} has #{values.size} values (#{values.join(" · ")})."
+            = "Confirm with the customer which #{label == "FPN" ? label : label.downcase} applies before committing a date."
   %table.keys
     %thead
       %tr

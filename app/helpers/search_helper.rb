@@ -7,6 +7,21 @@ module SearchHelper
     context.values_at(*KEY_DIMENSIONS).any? { |values| Array(values).many? }
   end
 
+  KEY_DIMENSION_LABELS = { fpn: "FPN", customer: "Sold-to", site: "Plant" }.freeze
+
+  # Each key and dimension holding more than one value, for the alert over the
+  # keys table: [key, label, values]. Two keys with different FPNs is normal;
+  # one key with two is the conflict.
+  def key_conflicts(keys, context)
+    keys.flat_map do |key|
+      ctx = context[key.id] || {}
+      KEY_DIMENSIONS.filter_map do |dimension|
+        values = Array(ctx[dimension])
+        [ key, KEY_DIMENSION_LABELS.fetch(dimension), values ] if values.many?
+      end
+    end
+  end
+
   # Part numbers, order numbers and references read as codes, not prose.
   MONO_COLUMNS = %i[
     escalation_number mpn cpn fpn cpo_ref so_ref po po_pos seq po_ref_a ref_a ref_b
