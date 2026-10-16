@@ -17,7 +17,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", count: 2
     assert_select "table.lines tbody tr", count: 4
     assert_select "table.keys td.multi", text: /FCS-CPN-100.*FCS-MPN-A/m
-    assert_select ".freshness", text: /Sep 07, 15:38.*CSR_OSOR_AMERICAS.*##{csr_snapshots(:current).id}/m
+    assert_select ".freshness[title=?]", "CSR_OSOR_AMERICAS · snapshot ##{csr_snapshots(:current).id}", text: /OSOR.*Sep 07, 15:38/m
     assert_select ".cards .card:nth-child(2) .value", text: "2"
   end
 
@@ -26,6 +26,8 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".sources .source.live", count: 2
     assert_select ".sources .source.not-loaded", count: 3
+    assert_select ".sources .source.not-loaded.impact", text: /Demand.*not loaded.*forecast coverage unavailable/m
+    assert_select ".sources", text: /Retry/, count: 0
   end
 
   test "tells how long ago the open orders were refreshed" do
@@ -111,7 +113,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", text: /MPN-A.*Below target · 0.5×.*at target from Sep 26/m, count: 1
     assert_select "table.keys .pill", count: 1, message: "a key the buffer report does not carry shows no state"
     assert_select ".narrative li", text: /Buffer: 1 of 1 key with a safety stock drops below it \(lowest 0.5×\)/
-    assert_select ".sources .source.live", text: /Buffer.*CS_tempTrendBufferReadinessProjection/m
+    assert_select ".sources .source.live[title^=?]", "CS_tempTrendBufferReadinessProjection", text: /Buffer/
   end
 
   test "shows where each key's commit stands" do
@@ -129,7 +131,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.keys tbody tr", text: /MPN-A.*Short · 43,645.*from Oct 10/m, count: 1
     assert_select "table.keys tbody tr", text: /MPN-B.*Covered/m, count: 1
     assert_select ".narrative li", text: /Commit: 1 of 2 keys runs short of the forecast \(up to 43,645 pcs, from Oct 10\)/
-    assert_select ".sources .source.live", text: /Commit.*CSR_CustomerCommitment/m
+    assert_select ".sources .source.live[title^=?]", "CSR_CustomerCommitment", text: /Commit/
   end
 
   test "keeps the admin pages and logout in the account menu" do

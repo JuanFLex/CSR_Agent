@@ -1,15 +1,20 @@
 -# locals: (sources:)
--# One chip per source. A source never loaded says so instead of showing a number.
-%ul.sources
+-# One compact chip per source: its name and when it was fresh. The table it
+-# came from and the snapshot id are for whoever is debugging, so they sit in
+-# the tooltip. A source never loaded says so, and says what that leaves out
+-# where it is known. No retry: the loads run in the ETL, not from here.
+%ul.sources{ "aria-label": "Data sources" }
+  %li.sources-label Data sources
   - sources.each do |type, snapshot|
     - if snapshot
-      %li.source.live.freshness
+      %li.source.live.freshness{ title: "#{snapshot.source_file} · snapshot ##{snapshot.id}" }
         %span.dot>
         %strong= t("sources.#{type}")
-        #{snapshot.fresh_as_of&.strftime("%b %d, %H:%M") || "—"} ·
-        %code= snapshot.source_file
-        · ##{snapshot.id}
+        = snapshot.fresh_as_of&.strftime("%b %d, %H:%M") || "—"
     - else
-      %li.source.not-loaded
+      %li.source.not-loaded{ class: ("impact" if (impact = t("sources.missing_impact.#{type}", default: nil))) }
         %span.dot>
-        #{t("sources.#{type}")} · not loaded
+        %strong= t("sources.#{type}")
+        not loaded
+        - if impact
+          = "— #{impact}"

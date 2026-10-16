@@ -100,14 +100,16 @@ td.actions { display: flex; gap: 8px; }
 .refreshed { margin: 0; color: var(--muted); font-size: 12.5px; }
 
 /* Freshness per source: OSOR reloads twice a day, the weekly files do not. */
-.sources { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
-.source { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 14px; }
-.source code { font-size: 11px; }
+.sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.sources-label { margin-right: 2px; color: var(--muted); }
+.source { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 12px; }
 .source .dot { width: 8px; height: 8px; border-radius: 50%; }
 .source.live { background: var(--card); border: 1px solid #bfe3cd; }
 .source.live .dot { background: var(--green); }
 .source.not-loaded { border: 1px dashed #c9d2dd; color: #7d8a9b; }
 .source.not-loaded .dot { border: 1.5px solid #aab5c3; }
+.source.not-loaded.impact { border: 1px solid #f0d58a; background: var(--amber-bg); color: #7a5600; }
+.source.not-loaded.impact .dot { border-color: var(--amber); }
 
 /* Summary cards */
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }

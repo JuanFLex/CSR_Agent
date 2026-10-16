@@ -8,3 +8,7 @@ en:
     commit: "Commit"
     demand: "Demand"
     escalation: "Escalations"
+    # What a search cannot show while a source has no active snapshot. Only
+    # where the gap is known; the rest just read "not loaded".
+    missing_impact:
+      demand: "forecast coverage unavailable"
