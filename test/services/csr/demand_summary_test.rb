@@ -34,8 +34,9 @@ module Csr
     end
 
     test "a key with two rows shows the one that is not steady" do
-      moved(0.0, status: "Steady demand - Ok to process", customer_name: "ZZZFCS003")
-      moved(0.3, status: "Strong variation - Need confirmation", customer_name: "ZZZCAR018")
+      # The steady row moved more, so only the steady rule can pick the other.
+      moved(0.4, status: "Steady demand - Ok to process", customer_name: "ZZZFCS003")
+      moved(0.2, status: "Strong variation - Need confirmation", customer_name: "ZZZCAR018")
 
       assert_equal "Strong variation", position.label
     end
