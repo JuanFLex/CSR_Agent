@@ -70,7 +70,7 @@ module Reporting
     end
 
     test "reads the freshness watermark" do
-      assert_equal Time.utc(2026, 9, 7, 15, 38, 31).to_i, OsorStaging.watermark.utc.to_i
+      assert_equal Time.zone.local(2026, 9, 7, 15, 38, 31), OsorStaging.watermark
     end
   end
 end

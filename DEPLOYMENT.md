@@ -247,6 +247,10 @@ sudo bash -c 'source <(grep "^DATABASES=" /usr/local/bin/backup_postgres.sh); pr
 sudo gunzip -t /mnt/postgresql_backup/csr_agent_production_*.backup.gz
 ```
 
+Confirmed on 2026-10-14: `csr_agent_production_YYYYMMDD_020001.backup.gz` lands
+every night since 2026-10-06 in `\\K-LNT5254.americas.ad.flextronics.com\postgresql_backup`
+(the share behind `/mnt/postgresql_backup`), next to the other apps' dumps.
+
 ## 10. Verify
 
 ```bash
@@ -260,7 +264,8 @@ Then search `STL135N8F7AG` (red, with a line-down escalation) and
 ## Jobs
 
 `config/recurring.yml` schedules the ingests in production: OSOR every 15
-minutes, FET and Buffer every hour. They only run while Solid Queue runs.
+minutes; FET, Buffer and Commit every hour. They only run while Solid Queue
+runs. Each poll that finds nothing new costs one aggregate query and exits.
 
 - `SOLID_QUEUE_IN_PUMA=1` (above) runs the workers inside the web process. One
   unit to manage, fine for UAT.
@@ -279,6 +284,17 @@ bundle exec rails db:migrate
 RAILS_RELATIVE_URL_ROOT=/csr bundle exec rails assets:precompile
 sudo systemctl restart csr_agent
 ```
+
+If a deploy changes how a source's rows are read, reload every source with the
+four `force: true` runners of "8. First load" instead of waiting for the polls.
+
+**Once, on the deploy that sets the time zone (`chore/uat-prep`).** The app
+used to run in UTC; it now runs in `America/Mexico_City`, and reads the
+reporting server's clock as Mexico time. The rows already loaded were read the
+old way, so their dates show a day early (an Oct 10 PDD as Oct 09) until each
+source reloads. The polls would do it within the hour on their own, since every
+watermark now reads 6 hours later; run the four runners right after the
+restart so no user sees it.
 
 ## Notes / gotchas
 

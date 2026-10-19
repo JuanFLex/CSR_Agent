@@ -28,7 +28,10 @@ module CsrAgent
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # The CSRs, the planners and the reporting server all keep Mexico's clock.
+    # In UTC, "today" turned into tomorrow at 18:00 and shifted the escalation
+    # tiers and the age of unconfirmed lines by a day. Stored times stay UTC.
+    config.time_zone = "America/Mexico_City"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
