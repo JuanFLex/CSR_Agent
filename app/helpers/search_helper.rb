@@ -97,6 +97,23 @@ module SearchHelper
     position.short? ? tag.span("Short · #{short_qty(position.min_balance)}", class: "pill late") : tag.span("Covered", class: "pill ok")
   end
 
+  # What the Demand Comparison report says of a key, and beside it the
+  # workbook's own flag when it is not green. "—" is a part the report does
+  # not carry.
+  def demand_pill(position)
+    return "—" if position.nil?
+
+    pills = [ tag.span(position.label, class: "pill #{position.steady? ? "ok" : "late"}") ]
+    pills << tag.span("Flag #{position.flag.to_s.upcase}", class: "pill #{position.flag == :red ? "late" : "warn"}") unless position.flag == :green
+    safe_join(pills, " ")
+  end
+
+  # The movement inside lead time: "+30% inside LT (3,000 pcs)".
+  def demand_move(position)
+    pct = number_to_percentage(position.lt_variation_pct.to_d * 100, precision: 0)
+    "#{"+" if position.lt_variation_pct.to_d.positive?}#{pct} inside LT (#{number_with_delimiter(position.lt_variation.to_i)} pcs)"
+  end
+
   # The Summary bullets. The same list is the body of "Copy to email", so the
   # card and the email cannot say different things.
   def summary_points(search, summary, context)
@@ -154,6 +171,19 @@ module SearchHelper
         ])
       else
         "Commit: #{committed.size == 1 ? "the key is" : "all #{committed.size} keys are"} covered against the forecast."
+      end
+    end
+
+    moved = search.demand.values
+    if moved.any?
+      unsteady = moved.reject(&:steady?)
+      points << if unsteady.any?
+        safe_join([
+          "Demand: ", tag.strong("#{unsteady.size} of #{pluralize(moved.size, "key")}", class: "bad"),
+          " #{unsteady.size == 1 ? "needs" : "need"} confirmation (#{unsteady.map(&:label).uniq.to_sentence})."
+        ])
+      else
+        "Demand: #{moved.size == 1 ? "the key is" : "all #{moved.size} keys are"} steady against last week."
       end
     end
 

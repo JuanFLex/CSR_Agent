@@ -16,6 +16,7 @@ module Csr
     has_many :escalations, dependent: :delete_all, inverse_of: :snapshot
     has_many :buffer_lines, dependent: :delete_all, inverse_of: :snapshot
     has_many :commit_lines, dependent: :delete_all, inverse_of: :snapshot
+    has_many :demand_lines, dependent: :delete_all, inverse_of: :snapshot
 
     enum :status, {
       loading:    "loading",
@@ -73,6 +74,7 @@ module Csr
         escalations.delete_all
         buffer_lines.delete_all
         commit_lines.delete_all
+        demand_lines.delete_all
         update!(status: :failed, notes: reason)
       end
       self

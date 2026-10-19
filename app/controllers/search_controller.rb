@@ -25,6 +25,7 @@ class SearchController < ApplicationController
     @context = @search.context
     @buffer = @search.buffer
     @commit = @search.commit
+    @demand = @search.demand
     @lines = @search.lines.to_a
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)

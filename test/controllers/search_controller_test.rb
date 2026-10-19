@@ -125,4 +125,20 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select ".narrative li", text: /Commit: 1 of 2 keys runs short of the forecast \(up to 43,645 pcs, from Oct 10\)/
     assert_select ".sources .source.live", text: /Commit.*CSR_CustomerCommitment/m
   end
+
+  test "shows where each key's demand stands" do
+    snapshot = Csr::Snapshot.create!(region: "Americas", source_type: "demand", status: :active,
+                                     source_file: "CSR_DemandComparison", activated_at: Time.current)
+    Csr::DemandLine.create!(snapshot: snapshot, part_key: csr_part_keys(:primary), cpn: "CPN-100", mpn: "MPN-A",
+                            status: "Strong variation - Need confirmation", lt_variation: 3000, lt_variation_pct: 0.3)
+    Csr::DemandLine.create!(snapshot: snapshot, part_key: csr_part_keys(:alternate), cpn: "CPN-100", mpn: "MPN-B",
+                            status: "Steady demand - Ok to process", lt_variation: 0, lt_variation_pct: 0)
+
+    get root_url, params: { search_type: "cpn", value: "CPN-100" }
+
+    assert_select "table.keys tbody tr", text: /MPN-A.*Strong variation.*\+30%/m, count: 1
+    assert_select "table.keys tbody tr", text: /MPN-B.*Steady demand/m, count: 1
+    assert_select ".narrative li", text: /Demand: 1 of 2 keys/
+    assert_select ".sources .source.live", text: /Demand.*CSR_DemandComparison/m
+  end
 end
