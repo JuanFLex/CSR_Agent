@@ -2,6 +2,8 @@ module Csr
   module Demand
     # Copies one row per part of CSR_DemandComparison into a new snapshot.
     class Ingest < SourceIngest
+      include WaitsForEtl
+
       def initialize(staging: Reporting::DemandStaging, **options)
         super(**options)
         @staging = staging

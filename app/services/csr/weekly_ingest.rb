@@ -11,14 +11,9 @@ module Csr
   # A subclass names its `column_map`, its `line_model` and the attribute a
   # week's value is stored under.
   class WeeklyIngest < SourceIngest
-    # The ETL fills these tables with a bulk load that is not one transaction,
-    # and the dates come from a third table loaded in the same run. A load
-    # this recent may still be under way, so it is left for the next poll.
-    #
-    # ponytail: a fixed wait, on the assumption that the package finishes all
-    # its sheets within it. If it ever runs longer, stamp one start time on
-    # every table and compare those instead.
-    SETTLE = 30.minutes
+    # The dates come from a third table loaded in the same run, so the wait
+    # covers it too.
+    include WaitsForEtl
 
     ROW_BATCH = 200
 
@@ -26,14 +21,6 @@ module Csr
       super(**options)
       @staging = staging
       @calendar = calendar
-    end
-
-    def call
-      age = staging.age unless @force
-      return super if age.nil? || age >= SETTLE
-
-      Result.new(status: :skipped, snapshot: Snapshot.current(source_type, region: @region),
-                 message: "#{staging.table_name} was loaded #{(age / 60).round} min ago; waiting for the ETL to finish")
     end
 
     private
