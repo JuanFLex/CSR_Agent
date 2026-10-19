@@ -21,8 +21,8 @@ module Csr
 
       test "reads the sheet's unnamed columns and stores its 52 weeks" do
         row = {
-          "NoName2" => "702_ZZZCAR018", "NoName3" => "FLX000558", "NoName4" => "CPN-900",
-          "NoName5" => " FCS-MPN-Z ", "NoName6" => "MPN-Z", "F18" => 0.0, "F19" => -4000.0, "F69" => -12.0
+          "F3" => "702_ZZZCAR018", "F4" => "FLX000558", "F5" => "CPN-900",
+          "F6" => " FCS-MPN-Z ", "F7" => "MPN-Z", "F18" => 0.0, "F19" => -4000.0, "F69" => -12.0
         }
 
         result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK)).call
