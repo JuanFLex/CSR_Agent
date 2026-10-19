@@ -187,6 +187,7 @@ table.lines th:first-child { z-index: 3; background: #f8fafc; }
 .pill.late { background: var(--red-bg); color: var(--red-ink); }
 .pill.ok { background: var(--green-bg); color: var(--green); }
 .pill.unconfirmed { background: #eef1f5; color: #5b6878; }
+.pill.warn { background: var(--amber-bg); color: #8a6100; }
 .pill.tier { background: #e8eefc; color: #1d4ed8; }
 
 /* Usage dashboard's weekly chart: CSS bars, no JS charting library. */

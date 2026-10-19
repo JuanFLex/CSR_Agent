@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,26 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_12_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["snapshot_id", "part_key_id"], name: "index_csr_commit_lines_on_snapshot_id_and_part_key_id"
+  end
+
+  create_table "csr_demand_lines", force: :cascade do |t|
+    t.bigint "snapshot_id", null: false
+    t.bigint "part_key_id"
+    t.string "cpn", limit: 200
+    t.string "mpn", limit: 200
+    t.string "fpn", limit: 200
+    t.string "customer_name", limit: 100
+    t.string "ship_address", limit: 100
+    t.string "company", limit: 50
+    t.string "status", limit: 100
+    t.integer "eff_lead_time"
+    t.decimal "lt_variation", precision: 18, scale: 4
+    t.decimal "lt_variation_pct", precision: 18, scale: 6
+    t.decimal "total_variation", precision: 18, scale: 4
+    t.decimal "total_variation_pct", precision: 18, scale: 6
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snapshot_id", "part_key_id"], name: "index_csr_demand_lines_on_snapshot_id_and_part_key_id"
   end
 
   create_table "csr_escalations", force: :cascade do |t|
@@ -231,6 +251,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_12_120000) do
   add_foreign_key "csr_buffer_lines", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_commit_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_commit_lines", "csr_snapshots", column: "snapshot_id"
+  add_foreign_key "csr_demand_lines", "csr_part_keys", column: "part_key_id"
+  add_foreign_key "csr_demand_lines", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_escalations", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_osor_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_osor_lines", "csr_snapshots", column: "snapshot_id"

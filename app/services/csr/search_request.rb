@@ -64,6 +64,11 @@ module Csr
       @commit ||= CommitSummary.new(part_keys, snapshot: sources["commit"]).call
     end
 
+    # How each key's demand moved since last week, from the demand snapshot.
+    def demand
+      @demand ||= DemandSummary.new(part_keys, snapshot: sources["demand"]).call
+    end
+
     # The active snapshot of every source, nil for one never loaded — the
     # freshness chips. One query rather than one per source.
     def sources
