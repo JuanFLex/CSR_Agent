@@ -138,23 +138,28 @@ WHERE MPN IS NOT NULL
   AND CPN_EDI IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
--- 6. The weekly sheets: Buffer and Commit.
+-- 6. The weekly tables: Buffer, Commit and Demand.
 --
--- Settles: whether the login can read the three tables the weekly ingests use,
--- and whether the two wide ones carry the load stamp. can_select should be 1
--- on all three. last_load must not be NULL: it is the only thing that tells
--- the portal a new workbook was loaded.
+-- Settles: whether the login can read the four tables the weekly ingests use,
+-- and whether the three wide ones carry the load stamp. can_select should be 1
+-- on all four. last_load must not be NULL: it is the only thing that tells
+-- the portal a new workbook was loaded. Demand reads only its Sales rows.
 -- ---------------------------------------------------------------------------
 SELECT
     HAS_PERMS_BY_NAME('dbo.CS_tempTrendBufferReadinessProjection', 'OBJECT', 'SELECT') AS can_select_buffer,
     HAS_PERMS_BY_NAME('dbo.CSR_CustomerCommitment', 'OBJECT', 'SELECT')                AS can_select_commit,
-    HAS_PERMS_BY_NAME('dbo.CS_tempVerticalCommit', 'OBJECT', 'SELECT')                 AS can_select_first_week;
+    HAS_PERMS_BY_NAME('dbo.CS_tempVerticalCommit', 'OBJECT', 'SELECT')                 AS can_select_first_week,
+    HAS_PERMS_BY_NAME('dbo.CSR_DemandComparison', 'OBJECT', 'SELECT')                  AS can_select_demand;
 
 SELECT 'buffer' AS sheet, COUNT(*) AS total_rows, MAX(loaded_at) AS last_load
 FROM CS_tempTrendBufferReadinessProjection
 UNION ALL
 SELECT 'commit', COUNT(*), MAX(loaded_at)
-FROM CSR_CustomerCommitment;
+FROM CSR_CustomerCommitment
+UNION ALL
+SELECT 'demand', COUNT(*), MAX(loaded_at)
+FROM CSR_DemandComparison
+WHERE SNAPSHOT_DATE = 'Sales';
 
 -- The first week of both sheets. It has to be a Saturday.
 SELECT MIN(TRY_CONVERT(date, [DATE], 101)) AS first_week

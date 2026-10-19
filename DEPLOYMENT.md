@@ -210,22 +210,25 @@ bundle exec rails runner 'p Csr::Osor::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Fet::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Buffer::Ingest.new(force: true).call.message'
 bundle exec rails runner 'p Csr::Commit::Ingest.new(force: true).call.message'
+bundle exec rails runner 'p Csr::Demand::Ingest.new(force: true).call.message'
 ```
 
-Buffer and Commit read the sheets of `CS_Trend_Forecast.xlsx` as the ETL
-already copies them, so there is nothing to create for them:
+Buffer, Commit and Demand read the tables the ETL already fills, so there is
+nothing to create for them:
 
 | Table | Read for |
 |---|---|
 | `CS_tempTrendBufferReadinessProjection` | Buffer: the `Balance vs SS (Buffer Stock)` rows |
 | `CSR_CustomerCommitment` | Commit: the `Balance` rows |
-| `CS_tempVerticalCommit` | the date of the first week, for both |
+| `CS_tempVerticalCommit` | the date of the first week, for Buffer and Commit |
+| `CSR_DemandComparison` | Demand: the `Sales` rows of the weekly Demand Comparison report |
 
-The first two need a `loaded_at` column stamped by the ETL on every load: it
-is how the portal knows there is something new. Without `force`, a load less
-than 30 minutes old is left for the next hourly poll, in case the package is
-still running. If either ingest fails it says why in the log, the portal
-keeps showing the previous load of that source, and nothing else is affected.
+All but `CS_tempVerticalCommit` need a `loaded_at` column stamped by the ETL
+on every load: it is how the portal knows there is something new. Without
+`force`, a load less than 30 minutes old is left for the next hourly poll, in
+case the package is still running. If an ingest fails it says why in the log,
+the portal keeps showing the previous load of that source, and nothing else is
+affected.
 
 ## 9. Backup
 
@@ -264,7 +267,7 @@ Then search `STL135N8F7AG` (red, with a line-down escalation) and
 ## Jobs
 
 `config/recurring.yml` schedules the ingests in production: OSOR every 15
-minutes; FET, Buffer and Commit every hour. They only run while Solid Queue
+minutes; FET, Buffer, Commit and Demand every hour. They only run while Solid Queue
 runs. Each poll that finds nothing new costs one aggregate query and exits.
 
 - `SOLID_QUEUE_IN_PUMA=1` (above) runs the workers inside the web process. One
@@ -286,15 +289,17 @@ sudo systemctl restart csr_agent
 ```
 
 If a deploy changes how a source's rows are read, reload every source with the
-four `force: true` runners of "8. First load" instead of waiting for the polls.
+five `force: true` runners of "8. First load" instead of waiting for the polls.
 
 **Once, on the deploy that sets the time zone (`chore/uat-prep`).** The app
 used to run in UTC; it now runs in `America/Mexico_City`, and reads the
 reporting server's clock as Mexico time. The rows already loaded were read the
 old way, so their dates show a day early (an Oct 10 PDD as Oct 09) until each
 source reloads. The polls would do it within the hour on their own, since every
-watermark now reads 6 hours later; run the four runners right after the
-restart so no user sees it.
+watermark now reads 6 hours later; run the five runners right after the
+restart so no user sees it. Rolling back to a release before it needs the same
+runners: the old code reads the next load 6 hours earlier than the one it has,
+takes it for nothing new, and skips it.
 
 ## Notes / gotchas
 
