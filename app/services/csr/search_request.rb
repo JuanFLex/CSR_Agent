@@ -101,7 +101,7 @@ module Csr
     # One page of the open lines, earliest commit first. limit: nil is all of
     # them, for the export.
     def lines(limit: LINES_PER_PAGE, page: 1)
-      scoped_lines.order(:cdd, :so, :so_pos).limit(limit).offset(limit && (page - 1) * limit)
+      scoped_lines.order(:cdd, :so, :so_pos, :id).limit(limit).offset(limit && (page - 1) * limit)
     end
 
     # The late line with the widest gap between commit and need.
