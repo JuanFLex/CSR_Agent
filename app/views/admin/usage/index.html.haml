@@ -4,7 +4,7 @@
       %span.muted Usage since
       %code= @since
       - if @summary["last_use"].present?
-        %span.muted= "· last use #{@summary["last_use"].to_time.strftime("%b %d, %Y")}"
+        %span.muted= "· last use #{@summary["last_use"].in_time_zone.strftime("%b %d, %Y")}"
     .since-links
       - [ [ "Since #{Usage::DEFAULT_SINCE}", Usage::DEFAULT_SINCE ],
           [ "Last 90 days", 90.days.ago.to_date.to_s ],
@@ -65,7 +65,7 @@
               %td= row["email"]
               %td.num= row["searches"]
               %td.num= row["exports"]
-              %td.muted= row["last_search"]&.to_time&.strftime("%Y-%m-%d %H:%M")
+              %td.muted= row["last_search"]&.in_time_zone&.strftime("%Y-%m-%d %H:%M")
 
     .panel
       .panel-head
@@ -100,6 +100,6 @@
             %tr
               %td= row["email"]
               %td.num= row["sign_in_count"]
-              %td.muted= row["last_sign_in_at"]&.to_time&.strftime("%Y-%m-%d %H:%M") || "never"
+              %td.muted= row["last_sign_in_at"]&.in_time_zone&.strftime("%Y-%m-%d %H:%M") || "never"
     - else
       %p.hint Every account has searched at least once.

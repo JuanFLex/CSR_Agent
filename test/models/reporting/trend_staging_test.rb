@@ -36,7 +36,7 @@ module Reporting
     end
 
     test "tells a load's time and its age" do
-      assert_equal Time.utc(2026, 10, 12, 10, 41), CommitStaging.watermark
+      assert_equal Time.zone.local(2026, 10, 12, 10, 41), CommitStaging.watermark
       assert_operator CommitStaging.age, :>, 0
     end
 

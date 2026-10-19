@@ -48,8 +48,14 @@ module Csr
     def to_time(value)
       time =
         case value
-        when Time, DateTime then value
-        when Date           then value.to_time
+        # The reporting server stores its own wall clock with no zone, and
+        # Active Record reads it as UTC (sometimes already shifted into the
+        # app's zone). Its UTC reading is that wall clock, and that is what it
+        # means, so it is read in the app's zone: a PDD of Oct 10 stays Oct 10.
+        when Time, DateTime
+          wall = value.to_time.utc
+          Time.zone.local(wall.year, wall.month, wall.day, wall.hour, wall.min, wall.sec)
+        when Date           then value.in_time_zone
         else
           parsed = value.to_s.strip
           return nil if parsed.empty?
@@ -62,7 +68,8 @@ module Csr
         end
 
       return nil if time.nil?
-      return nil if time <= EPOCH_SENTINEL
+      # By date, so the sentinel holds whatever zone the time is read in.
+      return nil if time.to_date <= EPOCH_SENTINEL.to_date
 
       time
     end

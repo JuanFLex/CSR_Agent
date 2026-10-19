@@ -3,7 +3,7 @@ current:
   source_type: osor
   status: active
   source_file: CSR_OSOR_AMERICAS
-  source_modified_at: 2026-09-07 15:38:31
+  source_modified_at: 2026-09-07 21:38:31 # UTC: 15:38 on the reporting server's clock
   activated_at: 2026-09-07 15:40:00
   row_count: 6
 

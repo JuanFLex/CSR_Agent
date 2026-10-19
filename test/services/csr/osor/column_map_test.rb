@@ -26,8 +26,10 @@ module Csr
           assert_nil ColumnMap.coerce(time, :datetime)
         end
 
+        # The driver labels the server's wall clock UTC; the wall clock is kept.
         time = Time.utc(2026, 9, 7, 15, 38, 31)
-        assert_equal time, ColumnMap.coerce(time, :datetime)
+        assert_equal Time.zone.local(2026, 9, 7, 15, 38, 31), ColumnMap.coerce(time, :datetime)
+        assert_equal Time.zone.local(2026, 9, 7, 15, 38, 31), ColumnMap.coerce(time.in_time_zone, :datetime)
       end
 
       test "parses strings in the Rails time zone and respects explicit offsets" do
