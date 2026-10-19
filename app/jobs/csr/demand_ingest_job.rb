@@ -2,7 +2,8 @@ module Csr
   # Reloads CSR_DemandComparison into a snapshot when the ETL has refilled it.
   #
   # The report is generated on Mondays. This polls hourly like the others and
-  # exits on a single MAX(loaded_at) when nothing changed.
+  # exits after two small queries (the load's age, then its MAX(loaded_at))
+  # when nothing changed.
   class DemandIngestJob < ApplicationJob
     queue_as :default
 

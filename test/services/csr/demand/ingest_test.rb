@@ -35,6 +35,16 @@ module Csr
         assert_equal 0, DemandLine.in_snapshot(result.snapshot).count
       end
 
+      test "a reporting server that does not answer is a failed load, not a crash" do
+        staging = FakeStaging.new(rows: [ row ], counts: [ 1 ])
+        def staging.age = raise(ActiveRecord::ConnectionNotEstablished, "SQLPR5256 did not answer")
+
+        result = Ingest.new(staging: staging).call
+
+        assert_predicate result, :failed?
+        assert_match(/did not answer/, result.message)
+      end
+
       private
 
       def row(attributes = {})

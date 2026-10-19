@@ -268,7 +268,8 @@ Then search `STL135N8F7AG` (red, with a line-down escalation) and
 
 `config/recurring.yml` schedules the ingests in production: OSOR every 15
 minutes; FET, Buffer, Commit and Demand every hour. They only run while Solid Queue
-runs. Each poll that finds nothing new costs one aggregate query and exits.
+runs. Each poll that finds nothing new costs one or two aggregate queries and
+exits.
 
 - `SOLID_QUEUE_IN_PUMA=1` (above) runs the workers inside the web process. One
   unit to manage, fine for UAT.
@@ -297,9 +298,10 @@ reporting server's clock as Mexico time. The rows already loaded were read the
 old way, so their dates show a day early (an Oct 10 PDD as Oct 09) until each
 source reloads. The polls would do it within the hour on their own, since every
 watermark now reads 6 hours later; run the five runners right after the
-restart so no user sees it. Rolling back to a release before it needs the same
-runners: the old code reads the next load 6 hours earlier than the one it has,
-takes it for nothing new, and skips it.
+restart so no user sees it. Rolling back to a release before it needs a reload
+too, with the four runners that release has (it has no Demand): the old code
+reads the next load 6 hours earlier than the one it holds, so a load landing
+within those 6 hours looks like nothing new and is skipped.
 
 ## Notes / gotchas
 

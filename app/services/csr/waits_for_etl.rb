@@ -15,6 +15,11 @@ module Csr
 
       SourceIngest::Result.new(status: :skipped, snapshot: Snapshot.current(source_type, region: @region),
                                message: "#{staging.table_name} was loaded #{(age / 60).round} min ago; waiting for the ETL to finish")
+    # The age is read before the load's own rescue, so a reporting server that
+    # does not answer is a failed load here too: logged by the job, the
+    # previous snapshot still serving.
+    rescue StandardError => e
+      SourceIngest::Result.new(status: :failed, message: e.message)
     end
   end
 end
