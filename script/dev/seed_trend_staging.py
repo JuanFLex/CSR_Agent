@@ -25,9 +25,8 @@ BUFFER_TEXT = {0, 1, 2, 3, 4, 9, 10, 11, 18}
 VERTICAL = ["CUSTOMER_PART_CPN_DELIVERY_ADDRESS", "CUSTOMER", "PART", "CPN", "DELIVERY_ADDRESS", "TYPE", "DATE", "QTY",
             "DATE_LOG", "QUARTER_LOG", "QTY_VALUE", "SITE", "END_CUSTOMER", "ACCOUNT_MANAGER"]
 
-# The sheet's first row is almost empty, so the ETL had no names to give.
-COMMIT = (["NoName"] + [f"NoName{n}" for n in range(1, 7)] + ["F8"] + [f"NoName{n}" for n in range(7, 15)] + ["ETD"]
-          + [f"F{n}" for n in range(18, 71)] + ["NoName15"])
+# The sheet's first row is almost empty, so the ETL names its columns by position.
+COMMIT = [f"F{n}" for n in range(1, 72)]
 COMMIT_TEXT = set(range(1, 10)) | {15}
 
 wb = openpyxl.load_workbook(SRC, read_only=True, data_only=True)

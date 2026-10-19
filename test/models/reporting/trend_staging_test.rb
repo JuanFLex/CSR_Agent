@@ -8,14 +8,15 @@ module Reporting
       connection = Base.connection
 
       connection.create_table(CommitStaging.table_name, id: false, force: true) do |t|
-        Csr::Commit::ColumnMap.select_columns.each { |column| column.start_with?("F") ? t.float(column) : t.string(column) }
-        t.string :NoName14
+        Csr::Commit::ColumnMap::COLUMNS.each_key { |column| t.string(column) }
+        Csr::Commit::ColumnMap::WEEK_COLUMNS.each { |column| t.float(column) }
+        t.string :F16
         t.datetime :loaded_at
       end
-      commit_row("NoName2" => "Customer", "NoName3" => "Delivery Address", "NoName4" => "CPN",
-                 "NoName5" => "Part", "NoName6" => "MPN", "NoName14" => "")
-      commit_row("NoName4" => "CPN-900", "NoName6" => "MPN-Z", "NoName14" => "Forecast", "F18" => 4000.0)
-      commit_row("NoName4" => "CPN-900", "NoName6" => "MPN-Z", "NoName14" => "Balance", "F18" => -4000.0)
+      commit_row("F3" => "Customer", "F4" => "Delivery Address", "F5" => "CPN",
+                 "F6" => "Part", "F7" => "MPN", "F16" => "")
+      commit_row("F5" => "CPN-900", "F7" => "MPN-Z", "F16" => "Forecast", "F18" => 4000.0)
+      commit_row("F5" => "CPN-900", "F7" => "MPN-Z", "F16" => "Balance", "F18" => -4000.0)
 
       connection.create_table(VerticalCommitStaging.table_name, id: false, force: true) { |t| t.string :DATE }
       %w[Date Past 1/2/2027 10/3/2026 10/3/2026 Future].each do |date|
@@ -31,7 +32,7 @@ module Reporting
       rows = CommitStaging.rows
 
       assert_equal 1, rows.size
-      assert_equal [ "CPN-900", "MPN-Z", -4000.0 ], rows.first.values_at("NoName4", "NoName6", "F18")
+      assert_equal [ "CPN-900", "MPN-Z", -4000.0 ], rows.first.values_at("F5", "F7", "F18")
       assert_equal 3, CommitStaging.count
     end
 
@@ -44,7 +45,7 @@ module Reporting
       assert_predicate CommitStaging, :layout_ok?
 
       # A column added before CPN: every label sits one column to the right.
-      CommitStaging.connection.execute(%(UPDATE "CSR_CustomerCommitment" SET "NoName5" = 'CPN', "NoName4" = 'New column' WHERE "NoName2" = 'Customer'))
+      CommitStaging.connection.execute(%(UPDATE "CSR_CustomerCommitment" SET "F6" = 'CPN', "F5" = 'New column' WHERE "F3" = 'Customer'))
 
       assert_not_predicate CommitStaging, :layout_ok?
     end

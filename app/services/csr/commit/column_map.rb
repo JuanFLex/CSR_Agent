@@ -10,15 +10,15 @@ module Csr
 
       # staging column => [ attribute, type ]
       COLUMNS = {
-        "NoName4" => [ :cpn,          :string ], # CPN
-        "NoName6" => [ :mpn,          :string ], # MPN
-        "NoName5" => [ :fpn,          :string ], # Part
-        "NoName2" => [ :customer_id,  :string ], # Customer
-        "NoName3" => [ :ship_address, :string ]  # Delivery Address
+        "F5" => [ :cpn,          :string ], # CPN
+        "F7" => [ :mpn,          :string ], # MPN
+        "F6" => [ :fpn,          :string ], # Part
+        "F3" => [ :customer_id,  :string ], # Customer
+        "F4" => [ :ship_address, :string ]  # Delivery Address
       }.freeze
 
-      # The 52 dated weeks. ETD before them is the sheet's Past, and F70 and
-      # NoName15 after them are its Future and Sum: all three are 0 on every
+      # The 52 dated weeks. F17 before them is the sheet's Past, and F70 and
+      # F71 after them are its Future and Sum: all three are 0 on every
       # Balance row, so they are left out.
       WEEK_COLUMNS = (18..69).map { |n| "F#{n}" }.freeze
     end
