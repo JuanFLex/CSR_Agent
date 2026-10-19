@@ -31,7 +31,7 @@ class SearchController < ApplicationController
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
     @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
-    log_search("search")
+    log_search("search") unless params[:page].present?
   end
 
   # Open orders, or the escalations with ?table=escalations. Each carries the

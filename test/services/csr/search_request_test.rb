@@ -18,6 +18,18 @@ module Csr
       assert_equal 4, search.lines(limit: 2, page: 3).offset_value
     end
 
+    test "pages tied order lines in a stable order without repeats or omissions" do
+      template = csr_osor_lines(:on_time).attributes.slice(*OsorLine.column_names).except("id")
+      OsorLine.insert_all!(1200.times.map { |sequence| template.merge("seq" => sequence.to_s) })
+      search = SearchRequest.new(search_type: "mpn", value: "MPN-A")
+      expected = search.lines(limit: nil).reorder(:cdd, :so, :so_pos, :id).pluck(:id)
+      pages = (expected.size.to_f / SearchRequest::LINES_PER_PAGE).ceil
+      actual = (1..pages).flat_map { |page| search.lines(page: page).to_a.map(&:id) }
+
+      assert_equal expected, actual
+      assert_equal actual.uniq, actual
+    end
+
     test "keeps the same snapshot across resolution summary context and lines" do
       search = SearchRequest.new(search_type: "cpn", value: "CPN-100")
       snapshot = search.snapshot
