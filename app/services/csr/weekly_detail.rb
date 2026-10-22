@@ -54,6 +54,40 @@ module Csr
       @demand_rows ||= lines(DemandLine, "demand").order(:fpn, :ship_address).group_by(&:part_key_id)
     end
 
+    # => { part_key_id => [ [ week, balance in pieces, safety stock ] ] }, over
+    # the rows with a safety stock: vs_ss is the balance as a multiple of it,
+    # so it gives the pieces back. A key with no target has nothing to draw.
+    def buffer_weeks
+      lines(BufferLine, "buffer").where("safety_stock > 0").group(:part_key_id, :bucket_date).order(:bucket_date)
+        .pluck(:part_key_id, :bucket_date, Arel.sql("SUM(vs_ss * safety_stock)"), Arel.sql("SUM(safety_stock)"))
+        .group_by(&:first).transform_values { |rows| rows.map { |_id, *week| week } }
+    end
+
+    # => { part_key_id => [ [ week, balance ] ] }
+    def commit_weeks
+      lines(CommitLine, "commit").group(:part_key_id, :bucket_date).order(:bucket_date)
+        .pluck(:part_key_id, :bucket_date, Arel.sql("SUM(balance)"))
+        .group_by(&:first).transform_values { |rows| rows.map { |_id, *week| week } }
+    end
+
+    # => { part_key_id => [ weeks, last week's demand, this week's ] }, for the
+    # keys whose rows carry the report's two snapshots.
+    def demand_weeks
+      demand_rows.transform_values { |rows|
+        rows = rows.select(&:old_weeks)
+        next if rows.empty?
+
+        size = rows.map { |row| row.old_weeks.size }.max
+        add_up = ->(attribute) { Array.new(size) { |i| rows.sum { |row| row.public_send(attribute)[i].to_d } } }
+        [ Array.new(size) { |i| rows.first.old_snapshot_on + 7 * i }, add_up.(:old_weeks), add_up.(:new_weeks) ]
+      }.compact
+    end
+
+    # => { part_key_id => [ WeeklyPosition ] }, oldest week first.
+    def history
+      @history ||= WeeklyPosition.for_keys(@part_keys.select(:id)).order(:week).group_by(&:part_key_id)
+    end
+
     private
 
     def lines(model, source)

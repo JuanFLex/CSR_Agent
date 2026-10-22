@@ -1,6 +1,7 @@
--# locals: (keys:, rows:, commit:)
+-# locals: (keys:, detail:, commit:)
 -# Each searched key's rows of the Customer Commitment report. The balance is
 -# the forecast not yet covered by a commitment, accumulated week by week.
+- rows, balances = detail.commit_rows, detail.commit_weeks
 - if rows.empty?
   %p.hint The Customer Commitment report carries none of these parts.
 - keys.each do |key|
@@ -26,3 +27,11 @@
               %td= row.ship_address || "—"
               %td.num= row.min_balance.to_d.negative? ? short_qty(row.min_balance) : "—"
               %td= row.short_from ? short_date(row.short_from) : "Covered"
+    - if (weeks = balances[key.id])
+      .charts
+        .chart-box
+          %h3 Commit balance by week
+          = week_chart(weeks.map(&:first),
+                       [ { name: "Balance", values: weeks.map(&:second), kind: :bars, tone: "short" } ],
+                       label: "Commit balance, week by week, for #{key.key_value}")
+          %p.caption Pieces of forecast not covered by a commitment, accumulated. No bar is a covered week.

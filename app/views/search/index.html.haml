@@ -46,11 +46,11 @@
           - else
             %p.hint No open escalations on these parts.
         - when "buffer"
-          = render "buffer", keys: @keys, rows: @detail.buffer_rows, buffer: @buffer
+          = render "buffer", keys: @keys, detail: @detail, buffer: @buffer
         - when "commit"
-          = render "commit", keys: @keys, rows: @detail.commit_rows, commit: @commit
+          = render "commit", keys: @keys, detail: @detail, commit: @commit
         - when "demand"
-          = render "demand", keys: @keys, rows: @detail.demand_rows, demand: @demand
+          = render "demand", keys: @keys, detail: @detail, demand: @demand
         - else
           = render "summary", summary: @summary
           .split

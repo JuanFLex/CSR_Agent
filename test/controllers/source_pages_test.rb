@@ -50,6 +50,7 @@ class SourcePagesTest < ActionDispatch::IntegrationTest
     assert_select ".panel", count: 1, text: /CPN-100\|.*MPN-A.*Below target · 0.5×/m
     assert_select "tbody tr", text: /702.*4,000.*40,000.*10×.*0.5×.*Oct 10/m
     assert_select "tbody tr", text: /703.*No target/m
+    assert_select ".chart svg[aria-label^=?] polyline", "Projected balance against safety stock", count: 2
   end
 
   test "Commit shows each row's shortage, or that it is covered" do
@@ -61,6 +62,7 @@ class SourcePagesTest < ActionDispatch::IntegrationTest
 
     assert_select "tbody tr", text: /FCS-1.*1,500.*Oct 10/m
     assert_select "tbody tr", text: /FCS-2.*Covered/m
+    assert_select ".chart svg path.bar.short", count: 1
   end
 
   test "Demand Variation shows each row's movement" do

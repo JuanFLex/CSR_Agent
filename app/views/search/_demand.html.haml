@@ -1,6 +1,7 @@
--# locals: (keys:, rows:, demand:)
+-# locals: (keys:, detail:, demand:)
 -# Each searched key's rows of the Demand Comparison report: how this week's
 -# demand differs from last week's, inside lead time and in total.
+- rows, snapshots, history = detail.demand_rows, detail.demand_weeks, detail.history
 - if rows.empty?
   %p.hint The Demand Comparison report carries none of these parts.
 - keys.each do |key|
@@ -30,3 +31,21 @@
               %td= row.status || "—"
               %td.num= demand_change(row.lt_variation, row.lt_variation_pct)
               %td.num= demand_change(row.total_variation, row.total_variation_pct)
+    .charts
+      .chart-box
+        %h3 Demand by week: last week vs this week
+        - if (weeks, old, new = snapshots[key.id])
+          = week_chart(weeks,
+                       [ { name: "Last week's snapshot", values: old, kind: :line, tone: "previous" },
+                         { name: "This week's snapshot", values: new, kind: :line, tone: "primary" } ],
+                       label: "Demand by week in last week's and this week's snapshot, for #{key.key_value}")
+          %p.caption Pieces, from the Demand Comparison report.
+        - else
+          %p.hint This week's report did not carry the weekly snapshots.
+      .chart-box
+        %h3 Total demand, week over week
+        - points = history[key.id].to_a.select(&:demand_total)
+        = week_chart(points.map(&:week),
+                     [ { name: "Total demand", values: points.map(&:demand_total), kind: :line, tone: "primary" } ],
+                     label: "Total demand in each weekly report, for #{key.key_value}")
+        %p.caption= history_note(points.map(&:week))

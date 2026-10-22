@@ -203,6 +203,33 @@ table.lines th:first-child { z-index: 3; background: #f8fafc; }
 .pill.warn { background: var(--amber-bg); color: #8a6100; }
 .pill.tier { background: #e8eefc; color: #1d4ed8; }
 
+/* Week-by-week charts (ChartHelper): one SVG per chart, two per row when
+   they fit. Orange and blue pass the colour-blind checks against white. */
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 14px 16px 16px; border-top: 1px solid var(--line-soft); }
+.chart-box h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.chart-box .caption { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.chart-box > .hint { padding: 24px 0; }
+.chart { margin: 0; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .grid { stroke: var(--line-soft); stroke-width: 1; }
+.chart .axis { stroke: #c3ccd7; stroke-width: 1; }
+.chart .tick { fill: var(--muted); font-size: 11px; }
+.chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { stroke: var(--card); stroke-width: 2; }
+.chart .primary { stroke: var(--accent); }
+.chart .dot.primary { fill: var(--accent); }
+.chart .previous { stroke: #c0620e; }
+.chart .reference { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart .bar.short { fill: var(--red); }
+.chart .hit { fill: transparent; }
+.chart .hit:hover { fill: rgba(29, 100, 216, .07); }
+.chart .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 6px; padding: 0; list-style: none; color: var(--ink); font-size: 12px; }
+.chart .legend li { display: flex; align-items: center; gap: 6px; }
+.chart .legend .key { width: 16px; height: 0; border-top: 2px solid; }
+.chart .legend .key.primary { border-color: var(--accent); }
+.chart .legend .key.previous { border-color: #c0620e; }
+.chart .legend .key.reference { border-top: 1.5px dashed var(--muted); }
+
 /* Usage dashboard's weekly chart: CSS bars, no JS charting library. */
 .bars { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 16px 4px 0; }
 .bar-col { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
@@ -218,6 +245,7 @@ table.lines th:first-child { z-index: 3; background: #f8fafc; }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .split { grid-template-columns: minmax(0, 1fr); }
   .workspace { grid-template-columns: minmax(0, 1fr); }
+  .charts { grid-template-columns: minmax(0, 1fr); }
   .sidenav { padding: 8px 12px; overflow-x: auto; }
   .sidenav .links { position: static; flex-direction: row; }
 }

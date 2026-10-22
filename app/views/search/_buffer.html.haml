@@ -1,6 +1,7 @@
--# locals: (keys:, rows:, buffer:)
+-# locals: (keys:, detail:, buffer:)
 -# Each searched key's rows of the Buffer Readiness report. The pill in the
 -# header is the key's position, the same one the Part keys table shows.
+- rows, projections, history = detail.buffer_rows, detail.buffer_weeks, detail.history
 - if rows.empty?
   %p.hint The Buffer Readiness report carries none of these parts.
 - keys.each do |key|
@@ -41,3 +42,22 @@
                 %td.num= buffer_ratio(row.coverage)
                 %td.num= buffer_ratio(row.min_vs_ss)
                 %td= short_date(row.at_target_from)
+    .charts
+      .chart-box
+        %h3 Projected balance vs safety stock
+        - if (weeks = projections[key.id])
+          = week_chart(weeks.map(&:first),
+                       [ { name: "Projected balance", values: weeks.map(&:second), kind: :line, tone: "primary" },
+                         { name: "Safety stock", values: weeks.map(&:third), kind: :reference, tone: "reference" } ],
+                       label: "Projected balance against safety stock, week by week, for #{key.key_value}")
+          %p.caption Pieces, from this week's report. Below the dashed line the part is into its buffer.
+        - else
+          %p.hint No safety stock agreed: nothing to measure the balance against.
+      .chart-box
+        %h3 Allocated on hand, week over week
+        - points = history[key.id].to_a.select(&:allocated_on_hand)
+        = week_chart(points.map(&:week),
+                     [ { name: "Allocated on hand", values: points.map(&:allocated_on_hand), kind: :line, tone: "primary" },
+                       { name: "Safety stock", values: points.map(&:safety_stock), kind: :reference, tone: "reference" } ],
+                     label: "Allocated on hand against safety stock in each weekly report, for #{key.key_value}")
+        %p.caption= history_note(points.map(&:week))
