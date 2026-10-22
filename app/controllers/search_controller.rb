@@ -8,8 +8,20 @@ class SearchController < ApplicationController
   # states the intent instead of relying on that.
   access user: :all
 
+  # The left menu, in Alejandro's order: the search's summary first, then a
+  # page per source. A search from the box always lands on the dashboard.
+  VIEWS = {
+    "dashboard"   => "Dashboard",
+    "orders"      => "Open Orders",
+    "buffer"      => "Buffer Readiness",
+    "commit"      => "Commit",
+    "demand"      => "Demand Variation",
+    "escalations" => "Escalations (FET)"
+  }.freeze
+
   def index
     @search = Csr::SearchRequest.new(params)
+    @view = params[:view] || "dashboard"
 
     respond_to do |format|
       format.html { load_results unless @search.blank? }
@@ -32,7 +44,10 @@ class SearchController < ApplicationController
     @escalations = @search.escalations.to_a
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
     @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
-    log_search("search") unless params[:page].present?
+    @detail = Csr::WeeklyDetail.new(@search.part_keys, @search.sources) if %w[buffer commit demand].include?(@view)
+    # Paging and moving between the menu's pages look again at the same
+    # search; only one typed in the box is a new one.
+    log_search("search") unless params[:page].present? || params[:view].present?
   end
 
   # Open orders, or the escalations with ?table=escalations. Each carries the

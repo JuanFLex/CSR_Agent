@@ -1,5 +1,10 @@
-%main.page
-  = turbo_frame_tag "results" do
+-# The menu sits inside the frame, so a new search redraws its links with the
+-# new value; the frame advances the URL, so each page can be shared and Back
+-# works.
+= turbo_frame_tag "results", class: "workspace", data: { turbo_action: "advance" } do
+  = render "sidenav", search: @search, view: @view,
+           marks: (@summary ? sidenav_marks(@summary, @escalations, @buffer, @commit, @demand) : {})
+  %main.page.content
     - if @search.blank?
       %p.hint Search by CPN, MPN, CPO+Line, SO or FPN. A CPN carrying several MPNs returns one row per combination.
     - elsif @search.snapshot.nil?
@@ -32,10 +37,25 @@
       - if @summary[:combos_found].zero?
         %p.warn= safe_join([ "No results for ", tag.strong(@search.label), " = ", tag.code(@search.value), "." ])
       - else
-        = render "summary", summary: @summary
-        .split
-          = render "keys", keys: @keys, context: @context, buffer: @buffer, commit: @commit, demand: @demand
-          = render "narrative", search: @search, summary: @summary, context: @context
-        - if @escalations.any?
-          = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
-        = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages
+        - case @view
+        - when "orders"
+          = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages
+        - when "escalations"
+          - if @escalations.any?
+            = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
+          - else
+            %p.hint No open escalations on these parts.
+        - when "buffer"
+          = render "buffer", keys: @keys, rows: @detail.buffer_rows, buffer: @buffer
+        - when "commit"
+          = render "commit", keys: @keys, rows: @detail.commit_rows, commit: @commit
+        - when "demand"
+          = render "demand", keys: @keys, rows: @detail.demand_rows, demand: @demand
+        - else
+          = render "summary", summary: @summary
+          .split
+            = render "keys", keys: @keys, context: @context, buffer: @buffer, commit: @commit, demand: @demand
+            = render "narrative", search: @search, summary: @summary, context: @context
+          - if @escalations.any?
+            = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
+          = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages

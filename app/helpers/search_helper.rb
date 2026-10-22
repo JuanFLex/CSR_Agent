@@ -88,6 +88,18 @@ module SearchHelper
     end
   end
 
+  # What the left menu says beside each page: how many rows the table holds,
+  # or why the page deserves a look. Nothing when there is nothing to see.
+  def sidenav_marks(summary, escalations, buffer, commit, demand)
+    {
+      "orders"      => summary[:open_lines].nonzero?,
+      "escalations" => escalations.size.nonzero?,
+      "buffer"      => ("A key goes below its safety stock" if buffer.values.any?(&:below_target?)),
+      "commit"      => ("A key is short against the forecast" if commit.values.any?(&:short?)),
+      "demand"      => ("A key's demand is not steady" if demand.values.any? { |position| !position.steady? })
+    }
+  end
+
   # A key that can break between its CPN and its MPN, and nowhere else, so a
   # long one gives the table room instead of pushing its last columns out.
   def key_code(key)
@@ -138,6 +150,15 @@ module SearchHelper
   def demand_move(position)
     pct = number_to_percentage(position.lt_variation_pct.to_d * 100, precision: 0)
     "#{"+" if position.lt_variation_pct.to_d.positive?}#{pct} inside LT (#{number_with_delimiter(position.lt_variation.to_i)} pcs)"
+  end
+
+  # A signed movement in pieces and as a share: "+3,000 (+30%)".
+  def demand_change(pieces, ratio)
+    return "—" if pieces.nil?
+
+    sign = ->(value) { "+" if value.to_d.positive? }
+    share = " (#{sign.(ratio)}#{number_to_percentage(ratio.to_d * 100, precision: 0)})" if ratio
+    "#{sign.(pieces)}#{number_with_delimiter(pieces.to_i)}#{share}"
   end
 
   # The Summary bullets. The same list is the body of "Copy to email", so the

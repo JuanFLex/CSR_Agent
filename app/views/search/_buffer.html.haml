@@ -1,0 +1,43 @@
+-# locals: (keys:, rows:, buffer:)
+-# Each searched key's rows of the Buffer Readiness report. The pill in the
+-# header is the key's position, the same one the Part keys table shows.
+- if rows.empty?
+  %p.hint The Buffer Readiness report carries none of these parts.
+- keys.each do |key|
+  - next unless rows[key.id]
+  %section.panel
+    %header.panel-head
+      %h2= key_code(key)
+      = buffer_pill(buffer[key.id])
+    .table-wrap
+      %table
+        %thead
+          %tr
+            %th FPN
+            %th Site
+            %th Supplier
+            %th Customer ID
+            %th Ship-to
+            %th.num Safety stock
+            %th.num{ title: "Allocated Customer On Hand, as the report names it" } Allocated on hand
+            %th.num{ title: "Allocated on hand as a multiple of the safety stock: the report's Buffer % Coverage" } Coverage
+            %th.num{ title: "Lowest week of the projected balance against safety stock; 1× is on target" } Lowest vs SS
+            %th At target from
+        %tbody
+          - rows[key.id].each do |row|
+            %tr
+              %td= row.fpn || "—"
+              %td= row.site || "—"
+              %td= row.supplier || "—"
+              %td= row.customer_id || "—"
+              %td= row.ship_address || "—"
+              %td.num= number_with_delimiter(row.safety_stock.to_i)
+              %td.num= number_with_delimiter(row.allocated_on_hand.to_i)
+              - if row.no_target?
+                %td.num{ colspan: 2 }
+                  %span.pill.unconfirmed No target
+                %td —
+              - else
+                %td.num= buffer_ratio(row.coverage)
+                %td.num= buffer_ratio(row.min_vs_ss)
+                %td= short_date(row.at_target_from)

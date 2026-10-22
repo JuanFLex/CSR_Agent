@@ -1,0 +1,28 @@
+-# locals: (keys:, rows:, commit:)
+-# Each searched key's rows of the Customer Commitment report. The balance is
+-# the forecast not yet covered by a commitment, accumulated week by week.
+- if rows.empty?
+  %p.hint The Customer Commitment report carries none of these parts.
+- keys.each do |key|
+  - next unless rows[key.id]
+  %section.panel
+    %header.panel-head
+      %h2= key_code(key)
+      = commit_pill(commit[key.id])
+    .table-wrap
+      %table
+        %thead
+          %tr
+            %th FPN
+            %th Customer ID
+            %th Ship-to
+            %th.num{ title: "Most pieces of forecast left without a commitment in any week" } Short qty
+            %th Short from
+        %tbody
+          - rows[key.id].each do |row|
+            %tr
+              %td= row.fpn || "—"
+              %td= row.customer_id || "—"
+              %td= row.ship_address || "—"
+              %td.num= row.min_balance.to_d.negative? ? short_qty(row.min_balance) : "—"
+              %td= row.short_from ? short_date(row.short_from) : "Covered"

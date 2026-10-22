@@ -25,6 +25,16 @@ class SearchLoggingTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "moving between the menu's pages does not log more searches" do
+    assert_difference -> { Csr::SearchLog.where(kind: "search").count }, 1 do
+      get root_url, params: { search_type: "cpn", value: "CPN-100" }
+      get css_select(".sidenav a").find { |a| a.text.include?("Buffer Readiness") }["href"]
+      assert_response :success
+      get css_select(".sidenav a").find { |a| a.text.include?("Dashboard") }["href"]
+      assert_response :success
+    end
+  end
+
   test "an export writes exactly one export log" do
     assert_difference -> { Csr::SearchLog.where(kind: "export").count }, 1 do
       get search_url(format: :csv), params: { search_type: "cpn", value: "CPN-100" }

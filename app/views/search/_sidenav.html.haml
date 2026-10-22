@@ -1,0 +1,16 @@
+-# locals: (search:, view:, marks: {})
+-# Alejandro's left menu: the dashboard, then a page per source. Each link
+-# carries the search, so moving between pages never asks for it again. A
+-# count or a red dot says which pages have something to look at.
+%nav.sidenav{ "aria-label": "Sections" }
+  .links
+    - SearchController::VIEWS.each do |name, label|
+      - mark = marks[name]
+      = link_to search_path(view: name, search_type: search.search_type, value: search.value.presence, region: search.region),
+                class: ("active" if name == view), "aria-current": ("page" if name == view) do
+        = label
+        - if mark.is_a?(Integer)
+          %span.count= number_with_delimiter(mark)
+        - elsif mark
+          %span.flag{ title: mark }
+            %span.visually-hidden= mark

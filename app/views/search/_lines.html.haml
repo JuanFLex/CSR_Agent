@@ -38,7 +38,7 @@
         = "Showing #{number_with_delimiter(first)}–#{number_with_delimiter(first + lines.size - 1)} of #{number_with_delimiter(summary[:open_lines])}"
         · sorted by ETD (CDD), earliest first
     - if pages > 1
-      - link = ->(to) { root_path(search_type: search.search_type, value: search.value, region: search.region, line_columns: columns, page: to) }
+      - link = ->(to) { url_for(request.path_parameters.merge(search_type: search.search_type, value: search.value, region: search.region, line_columns: columns, page: to)) }
       %nav.pager{ "aria-label": "Open orders pages" }
         - if page > 1
           = link_to "‹", link.(page - 1), class: "button", "aria-label": "Previous page"

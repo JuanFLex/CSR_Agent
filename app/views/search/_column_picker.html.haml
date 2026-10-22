@@ -6,7 +6,8 @@
 -# popover beside Export CSV, the same in both tables.
 %details.columns
   %summary.button= "Columns · #{columns.size} of #{model::COLUMNS.size}"
-  = form_with url: root_path, method: :get, data: { turbo_frame: "results" }, class: "column-picker" do
+  -# Back to the page it was opened on, Open Orders or the dashboard.
+  = form_with url: request.path, method: :get, data: { turbo_frame: "results" }, class: "column-picker" do
     = hidden_field_tag :search_type, search.search_type
     = hidden_field_tag :value, search.value
     = hidden_field_tag :region, search.region

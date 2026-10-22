@@ -1,0 +1,32 @@
+-# locals: (keys:, rows:, demand:)
+-# Each searched key's rows of the Demand Comparison report: how this week's
+-# demand differs from last week's, inside lead time and in total.
+- if rows.empty?
+  %p.hint The Demand Comparison report carries none of these parts.
+- keys.each do |key|
+  - next unless rows[key.id]
+  %section.panel
+    %header.panel-head
+      %h2= key_code(key)
+      %span= demand_pill(demand[key.id])
+    .table-wrap
+      %table
+        %thead
+          %tr
+            %th FPN
+            %th{ title: "The report's Customer Name column, which holds the Flex site" } Site
+            %th Ship-to
+            %th.num Eff. lead time
+            %th Status
+            %th.num{ title: "Pieces of demand that moved inside lead time since last week's snapshot" } Inside LT
+            %th.num Total
+        %tbody
+          - rows[key.id].each do |row|
+            %tr
+              %td= row.fpn || "—"
+              %td= row.customer_name || "—"
+              %td= row.ship_address || "—"
+              %td.num= row.eff_lead_time ? "#{row.eff_lead_time} days" : "—"
+              %td= row.status || "—"
+              %td.num= demand_change(row.lt_variation, row.lt_variation_pct)
+              %td.num= demand_change(row.total_variation, row.total_variation_pct)
