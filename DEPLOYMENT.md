@@ -304,6 +304,24 @@ too, with the four runners that release has (it has no Demand): the old code
 reads the next load 6 hours earlier than the one it holds, so a load landing
 within those 6 hours looks like nothing new and is skipped.
 
+**Once, on the deploy of the left menu (`feature/source-pages`).** The
+migration adds the allocated on hand, Demand's weekly snapshots and
+`csr_weekly_positions`, the week-over-week history. None of them is filled
+until Buffer and Demand load again, so run those two runners after the
+restart. Each load writes its week of history from then on. Then check that
+Demand found its week columns:
+
+```bash
+bundle exec rails runner 'p Csr::DemandLine.in_snapshot(Csr::Snapshot.current("demand")).where(old_weeks: nil).count'
+```
+
+It should print 0. Any other number means `CSR_DemandComparison` names its
+week columns some way other than `F9`..`F60` (see
+`Reporting::DemandStaging.week_columns`). Demand still loads and shows its
+table, but the weekly chart and the Demand history stay empty until the name
+is fixed; no zeros are recorded. Rolling back needs nothing: the older release
+does not read the new columns or the new table.
+
 ## Notes / gotchas
 
 - **The app never writes to SQL Server.** `Reporting::Base` refuses writes and
