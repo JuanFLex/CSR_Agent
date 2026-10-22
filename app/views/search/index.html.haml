@@ -52,7 +52,7 @@
         - when "demand"
           = render "demand", keys: @keys, detail: @detail, demand: @demand
         - else
-          = render "summary", summary: @summary
+          = render "summary", summary: @summary, buffer: @buffer, commit: @commit, demand: @demand
           .split
             = render "keys", keys: @keys, context: @context, buffer: @buffer, commit: @commit, demand: @demand
             = render "narrative", search: @search, summary: @summary, context: @context

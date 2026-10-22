@@ -156,9 +156,13 @@ module SearchHelper
   def demand_change(pieces, ratio)
     return "—" if pieces.nil?
 
-    sign = ->(value) { "+" if value.to_d.positive? }
-    share = " (#{sign.(ratio)}#{number_to_percentage(ratio.to_d * 100, precision: 0)})" if ratio
-    "#{sign.(pieces)}#{number_with_delimiter(pieces.to_i)}#{share}"
+    share = " (#{signed_percent(ratio)})" if ratio
+    "#{"+" if pieces.to_d.positive?}#{number_with_delimiter(pieces.to_i)}#{share}"
+  end
+
+  # A ratio as a signed whole percentage: 0.3 is "+30%".
+  def signed_percent(ratio)
+    "#{"+" if ratio.to_d.positive?}#{number_to_percentage(ratio.to_d * 100, precision: 0)}"
   end
 
   # The Summary bullets. The same list is the body of "Copy to email", so the

@@ -1,4 +1,4 @@
--# locals: (summary:)
+-# locals: (summary:, buffer: {}, commit: {}, demand: {})
 -# SUMMARY!B4:B9 plus the combo count from E6, ordered by importance. Risk is Excel parity: RED when any line has CDD > PDD.
 - late = summary[:misses].positive?
 %section.cards
@@ -36,3 +36,38 @@
     %span.label Combinations
     %span.value= summary[:combos_found]
     %span.note CPN|MPN keys
+
+-# The supply side of Alejandro's mockup: each source's worst key, so the
+-# dashboard says where to look before the tables do. The words carry the
+-# state; the red only repeats it.
+%section.cards.supply
+  - targeted = buffer.values.reject(&:no_target?)
+  - low = targeted.min_by(&:min_vs_ss)
+  .card{ class: ("bad" if low&.below_target?) }
+    %span.label Lowest buffer
+    - if low
+      %span.value= buffer_ratio(low.min_vs_ss)
+      %span.note= low.below_target? ? "below safety stock · #{pluralize(targeted.count(&:below_target?), "key")}" : "every key at or above its safety stock"
+    - else
+      %span.value —
+      %span.note= buffer.any? ? "no safety stock agreed" : "not in the Buffer Readiness report"
+
+  - short = commit.values.select(&:short?).min_by(&:min_balance)
+  .card{ class: ("bad" if short) }
+    %span.label Commit
+    - if short
+      %span.value= "Short #{short_qty(short.min_balance)}"
+      %span.note= "pcs of forecast uncovered, from #{short_date(short.short_from)}"
+    - else
+      %span.value= commit.any? ? "Covered" : "—"
+      %span.note= commit.any? ? "every week has a commitment" : "not in the Customer Commitment report"
+
+  - moved = demand.values.max_by { |position| position.lt_variation_pct.to_d.abs }
+  .card{ class: ("bad" if moved && !moved.steady?) }
+    %span.label Demand inside LT
+    - if moved
+      %span.value= signed_percent(moved.lt_variation_pct)
+      %span.note= "#{moved.label} · #{demand_change(moved.lt_variation, nil)} pcs since last week"
+    - else
+      %span.value —
+      %span.note not in the Demand Comparison report

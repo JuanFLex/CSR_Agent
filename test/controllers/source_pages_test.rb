@@ -76,6 +76,17 @@ class SourcePagesTest < ActionDispatch::IntegrationTest
     assert_select "tbody tr", text: /Aguas.*21 days.*Strong variation.*\+3,000 \(\+30%\).*-500 \(-5%\)/m
   end
 
+  test "the dashboard leads with each source's worst key" do
+    buffer_week(active("buffer"), csr_part_keys(:primary), safety_stock: 4000, vs_ss: 0.5, week: 0)
+    Csr::CommitLine.create!(snapshot: active("commit"), part_key: csr_part_keys(:alternate), bucket_date: Date.new(2026, 10, 10), balance: -1500)
+
+    get root_url, params: SEARCH
+
+    assert_select ".cards.supply .card.bad", text: /Lowest buffer\s*0.5×\s*below safety stock · 1 key/
+    assert_select ".cards.supply .card.bad", text: /Commit\s*Short 1,500/
+    assert_select ".cards.supply .card", text: /Demand inside LT\s*—\s*not in the Demand Comparison report/
+  end
+
   private
 
   def active(source)
