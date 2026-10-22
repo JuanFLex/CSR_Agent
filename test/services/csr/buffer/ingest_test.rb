@@ -21,6 +21,18 @@ module Csr
         assert_equal 8000, lines.first.safety_stock
       end
 
+      test "keeps the allocated on hand, and the week's position in the history" do
+        result = ingest(rows: [ row("F21" => "2", "F22" => "0.5", "ALLOCATED_CUSTOMER_ON_HAND" => "16,000"),
+                                row("FCP_SITE" => "703", "F21" => "0.25", "SAFETY_STOCK_CONSIDER_SPQ" => "0") ])
+
+        assert_equal [ 16_000 ], BufferLine.in_snapshot(result.snapshot).where(site: "702").distinct.pluck(:allocated_on_hand)
+        position = WeeklyPosition.sole
+        assert_equal [ FIRST_WEEK, 8000, 16_000, 0.5 ], [ position.week, position.safety_stock, position.allocated_on_hand, position.min_vs_ss ]
+
+        WeeklyPosition.record!([ { part_key_id: position.part_key_id, week: FIRST_WEEK, demand_total: 900 } ], %i[demand_total])
+        assert_equal [ 8000, 900 ], [ position.reload.safety_stock, position.demand_total ], "each source writes only its own columns"
+      end
+
       test "skips when the table has not been refilled" do
         previous = ingest(rows: [ row ]).snapshot
 
@@ -76,7 +88,7 @@ module Csr
           "CPN" => "CPN-900", "MANUFACTURER_PART" => "MPN-Z", "FCP_PART" => " FCS-MPN-Z ",
           "FCP_SITE" => "702", "SUPPLIER_NAME" => "702: SANYU TECHNOLOGY H K LTD",
           "CUSTOMER_ID" => "702_ZZZFCS003", "DELIVERY_ADDRESS" => "FLX000242",
-          "SAFETY_STOCK_CONSIDER_SPQ" => "8,000"
+          "SAFETY_STOCK_CONSIDER_SPQ" => "8,000", "ALLOCATED_CUSTOMER_ON_HAND" => "0"
         }.merge(attributes)
       end
 

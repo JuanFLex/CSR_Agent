@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,6 +29,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
     t.decimal "vs_ss", precision: 18, scale: 4
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "allocated_on_hand", precision: 18, scale: 4
     t.index ["snapshot_id", "part_key_id"], name: "index_csr_buffer_lines_on_snapshot_id_and_part_key_id"
   end
 
@@ -64,6 +65,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
     t.decimal "total_variation_pct", precision: 18, scale: 6
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "old_snapshot_on"
+    t.date "new_snapshot_on"
+    t.decimal "old_weeks", precision: 18, scale: 4, array: true
+    t.decimal "new_weeks", precision: 18, scale: 4, array: true
     t.index ["snapshot_id", "part_key_id"], name: "index_csr_demand_lines_on_snapshot_id_and_part_key_id"
   end
 
@@ -219,6 +224,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
     t.index ["source_type", "source_modified_at"], name: "index_csr_snapshots_on_source_type_and_source_modified_at"
   end
 
+  create_table "csr_weekly_positions", force: :cascade do |t|
+    t.bigint "part_key_id", null: false
+    t.date "week", null: false
+    t.decimal "safety_stock", precision: 18, scale: 4
+    t.decimal "allocated_on_hand", precision: 18, scale: 4
+    t.decimal "min_vs_ss", precision: 18, scale: 4
+    t.decimal "demand_total", precision: 18, scale: 4
+    t.decimal "lt_variation", precision: 18, scale: 4
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["part_key_id", "week"], name: "index_csr_weekly_positions_on_part_key_id_and_week", unique: true
+  end
+
   create_table "user_sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.datetime "started_at", null: false
@@ -257,5 +275,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_120000) do
   add_foreign_key "csr_osor_lines", "csr_part_keys", column: "part_key_id"
   add_foreign_key "csr_osor_lines", "csr_snapshots", column: "snapshot_id"
   add_foreign_key "csr_search_logs", "users"
+  add_foreign_key "csr_weekly_positions", "csr_part_keys", column: "part_key_id"
   add_foreign_key "user_sessions", "users"
 end

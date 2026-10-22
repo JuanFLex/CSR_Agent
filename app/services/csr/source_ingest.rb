@@ -80,6 +80,7 @@ module Csr
       end
 
       snapshot.activate!
+      record_history(snapshot)
       prune_history
       Result.new(status: :activated, snapshot: snapshot, message: activation_message(snapshot))
     end
@@ -118,6 +119,20 @@ module Csr
 
       [ ids, key_values ]
     end
+
+    # The week this load describes, kept in Csr::WeeklyPosition after the
+    # snapshot itself is pruned. Only weekly sources keep one. Like pruning, a
+    # failure must not fail a snapshot already serving; a forced reload of the
+    # same week writes it again.
+    def record_history(snapshot)
+      positions = weekly_positions(snapshot)
+      WeeklyPosition.record!(positions, positions.first.keys - %i[part_key_id week]) if positions.present?
+    rescue StandardError => e
+      Rails.logger.error("[csr.#{source_type}] recording the week's positions failed: #{e.message}")
+    end
+
+    # => [ { part_key_id:, week:, <the source's columns> } ]
+    def weekly_positions(_snapshot) = []
 
     # Housekeeping, not part of the load: a failure here must not turn a
     # snapshot that is already serving into a failed one, so it is logged and

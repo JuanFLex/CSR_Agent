@@ -17,7 +17,8 @@ module Csr
         "SUPPLIER_NAME"             => [ :supplier,     :string ],
         "CUSTOMER_ID"               => [ :customer_id,  :string ],
         "DELIVERY_ADDRESS"          => [ :ship_address, :string ],
-        "SAFETY_STOCK_CONSIDER_SPQ" => [ :safety_stock, :decimal ]
+        "SAFETY_STOCK_CONSIDER_SPQ"  => [ :safety_stock,      :decimal ],
+        "ALLOCATED_CUSTOMER_ON_HAND" => [ :allocated_on_hand, :decimal ]
       }.freeze
 
       # The sheet has 51 dated weeks and the table 50 numbered columns, so the

@@ -18,6 +18,7 @@ module Csr
     has_many :buffer_lines, dependent: :nullify, inverse_of: :part_key
     has_many :commit_lines, dependent: :nullify, inverse_of: :part_key
     has_many :demand_lines, dependent: :nullify, inverse_of: :part_key
+    has_many :weekly_positions, dependent: :delete_all, inverse_of: :part_key
 
     validates :key_value, presence: true, uniqueness: { scope: :region }
     validates :cpn, :mpn, presence: true

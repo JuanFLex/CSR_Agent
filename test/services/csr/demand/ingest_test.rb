@@ -19,6 +19,19 @@ module Csr
         assert_equal [ "Strong variation - Need confirmation", 3000, BigDecimal("0.3") ], [ line.status, line.lt_variation, line.lt_variation_pct ]
       end
 
+      test "keeps both snapshots week by week, and the week's demand in the history" do
+        snapshots = { "OLD_SNAPSHOT_ON" => Date.new(2026, 10, 3), "NEW_SNAPSHOT_ON" => Date.new(2026, 10, 10),
+                      "OLD_WEEKS" => [ 500, "700" ], "NEW_WEEKS" => [ 0, "1,200" ] }
+        result = ingest(rows: [ row(snapshots), row(snapshots.merge("FCP_PART" => "FCS1-MPN-Z", "VARIATION_INSIDE_LT" => 500)) ])
+
+        line = DemandLine.in_snapshot(result.snapshot).first
+        assert_equal [ [ 500, 700 ], [ 0, 1200 ] ], [ line.old_weeks, line.new_weeks ]
+        assert_equal Date.new(2026, 10, 3), line.old_snapshot_on
+
+        position = WeeklyPosition.sole
+        assert_equal [ Date.new(2026, 10, 10), 2400, 3500 ], [ position.week, position.demand_total, position.lt_variation ], "a key's two rows add up"
+      end
+
       test "leaves a load that may still be running for the next poll" do
         result = ingest(rows: [ row ], age: 10.minutes)
 
