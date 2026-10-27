@@ -55,8 +55,9 @@ git clone git@github.com:JuanFLex/CSR_Agent.git csr_agent
 cd csr_agent
 ```
 
-asdf's global Ruby on this host is 3.3.3, but every app runs 3.3.0. Run Ruby
-commands from inside the checkout, where `.ruby-version` decides.
+asdf's global Ruby on this host is 3.3.3; this app runs 3.3.12 (Rails 8.1 does not
+load on 3.3.0). Run Ruby commands from inside the checkout, where `.ruby-version`
+decides; the service itself runs whatever Ruby its unit names (section below).
 
 ## 3. Gems
 
@@ -129,10 +130,10 @@ EnvironmentFile=/etc/csr_agent.env
 # Not optional: systemd inherits nothing from the login shell, and without
 # these bundle exec fails with status=127 / "command not found: puma", even
 # though the same command works by hand.
-Environment=GEM_HOME=/export/home/infinex/.asdf/installs/ruby/3.3.0/lib/ruby/gems/3.3.0
-Environment=GEM_PATH=/export/home/infinex/.asdf/installs/ruby/3.3.0/lib/ruby/gems/3.3.0
-Environment=PATH=/export/home/infinex/.asdf/installs/ruby/3.3.0/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/export/home/infinex/.asdf/installs/ruby/3.3.0/bin/bundle exec puma -C config/puma.rb
+Environment=GEM_HOME=/export/home/infinex/.asdf/installs/ruby/3.3.12/lib/ruby/gems/3.3.0
+Environment=GEM_PATH=/export/home/infinex/.asdf/installs/ruby/3.3.12/lib/ruby/gems/3.3.0
+Environment=PATH=/export/home/infinex/.asdf/installs/ruby/3.3.12/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/export/home/infinex/.asdf/installs/ruby/3.3.12/bin/bundle exec puma -C config/puma.rb
 Restart=on-failure
 RestartSec=5
 
