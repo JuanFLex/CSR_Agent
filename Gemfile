@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.5", ">= 8.0.5.1"
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # PostgreSQL owns everything this app writes: its csr_* tables, users, and the
@@ -10,8 +10,8 @@ gem "pg", "~> 1.5"
 
 # SQL Server is read-only for this app. It holds the CSR_OSOR_AMERICAS staging
 # table, loaded by the DBA's own truncate+load process; the app never creates or
-# writes an object there. Pinned to the adapter's 8.0 line, which tracks Rails 8.0.
-gem "activerecord-sqlserver-adapter", "~> 8.0.11"
+# writes an object there. Pinned to the adapter's 8.1 line, which tracks Rails 8.1.
+gem "activerecord-sqlserver-adapter", "~> 8.1.4"
 gem "tiny_tds"
 
 # SQLite is here for one job: the local stand-in for the staging table, so
@@ -37,7 +37,7 @@ gem "haml", "~> 6.3"
 
 # Authentication (accounts created by an admin, no self-signup) and the
 # admin-only role check on top of it.
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 gem "petergate", "~> 3.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
