@@ -18,10 +18,6 @@ gem "tiny_tds"
 # development and test can exercise the reporting connection without reaching
 # the DBA's server. Nothing in production uses it.
 gem "sqlite3", ">= 2.1"
-# json 3.0 dropped the quirks_mode option that ActiveSupport 8.0 still passes on
-# every to_json call, which breaks all JSON rendering. Pinned until Rails stops
-# sending it.
-gem "json", "~> 2.7"
 # CSV export of open orders. csv leaves Ruby's default gems in 3.4, so declare it.
 gem "csv"
 
