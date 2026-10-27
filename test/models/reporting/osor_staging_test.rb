@@ -27,17 +27,17 @@ module Reporting
 
     test "reads the staging table" do
       assert_equal 1, OsorStaging.count
-      assert_equal "335971550", OsorStaging.first.CPO
+      assert_equal "335971550", OsorStaging.take.CPO
     end
 
     test "refuses to update a row" do
       assert_raises(ActiveRecord::ReadOnlyRecord) do
-        OsorStaging.first.update!(CPO: "tampered")
+        OsorStaging.take.update!(CPO: "tampered")
       end
     end
 
     test "refuses to destroy a row" do
-      assert_raises(ActiveRecord::ReadOnlyRecord) { OsorStaging.first.destroy }
+      assert_raises(ActiveRecord::ReadOnlyRecord) { OsorStaging.take.destroy }
     end
 
     test "read-only comes from the base class, so it covers every future model" do
