@@ -322,6 +322,14 @@ table, but the weekly chart and the Demand history stay empty until the name
 is fixed; no zeros are recorded. Rolling back needs nothing: the older release
 does not read the new columns or the new table.
 
+The end customer (`csr_part_keys.end_customer`, from `CS_tempVerticalCommit`'s
+`END_CUSTOMER`) is written after each Commit load, so force Commit once as
+well. Afterwards, about 4,400 keys should carry a customer:
+
+```bash
+bundle exec rails runner 'p Csr::PartKey.where.not(end_customer: nil).count'
+```
+
 ## Notes / gotchas
 
 - **The app never writes to SQL Server.** `Reporting::Base` refuses writes and

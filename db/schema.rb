@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_21_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_28_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -192,6 +192,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_21_120000) do
     t.string "region", default: "Americas", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "end_customer", limit: 200
     t.index ["cpn"], name: "index_csr_part_keys_on_cpn"
     t.index ["mpn"], name: "index_csr_part_keys_on_mpn"
     t.index ["region", "key_value"], name: "index_csr_part_keys_on_region_and_key_value", unique: true

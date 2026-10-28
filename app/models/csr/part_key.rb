@@ -33,6 +33,22 @@ module Csr
       value.to_s.gsub(/[[:cntrl:]]/, "").strip.squeeze(" ").presence
     end
 
+    # Sets every key's end customer from { cpn => name }; a key whose CPN is
+    # not there loses the one it had. In one transaction, so a search never
+    # sees the keys half updated. An empty map is a sheet read mid-load, not
+    # a world without customers, and changes nothing.
+    def self.record_end_customers!(names_by_cpn, region:)
+      return if names_by_cpn.empty?
+
+      keys = where(region: region)
+      transaction do
+        keys.where.not(end_customer: nil).update_all(end_customer: nil)
+        names_by_cpn.group_by(&:last).each do |name, pairs|
+          keys.where(cpn: pairs.map(&:first)).update_all(end_customer: name)
+        end
+      end
+    end
+
     def self.build_key(cpn, mpn)
       cpn = normalize(cpn)
       mpn = normalize(mpn)

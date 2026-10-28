@@ -106,6 +106,13 @@ module SearchHelper
     tag.code(safe_join([ tag.span("#{key.cpn}|"), tag.wbr, tag.span(key.mpn) ]))
   end
 
+  # A source page's panel title: the key, and who the part is built for.
+  def key_heading(key)
+    return key_code(key) unless key.end_customer
+
+    safe_join([ key_code(key), tag.span(key.end_customer, class: "end-customer") ], " ")
+  end
+
   # A balance as a multiple of the safety stock: 0.5× is half the target.
   def buffer_ratio(value)
     "#{number_with_precision(value, precision: 2, strip_insignificant_zeros: true)}×"

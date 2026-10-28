@@ -87,6 +87,20 @@ class SourcePagesTest < ActionDispatch::IntegrationTest
     assert_select ".cards.supply .card", text: /Demand inside LT\s*—\s*not in the Demand Comparison report/
   end
 
+  test "the keys table and the source pages name the end customer, and show a dash where it is unknown" do
+    csr_part_keys(:primary).update!(end_customer: "PHILO")
+    Csr::CommitLine.create!(snapshot: active("commit"), part_key: csr_part_keys(:primary), bucket_date: Date.new(2026, 10, 10), balance: 0)
+
+    get root_url, params: SEARCH
+
+    assert_select "table.keys tbody tr", text: /CPN-100\|.*MPN-A\s*PHILO/m
+    assert_select "table.keys tbody tr", text: /MPN-B\s*—/m
+
+    get search_url(view: "commit"), params: SEARCH
+
+    assert_select ".panel-head h2 .end-customer", text: "PHILO"
+  end
+
   private
 
   def active(source)

@@ -18,9 +18,16 @@ module Reporting
       commit_row("F5" => "CPN-900", "F7" => "MPN-Z", "F16" => "Forecast", "F18" => 4000.0)
       commit_row("F5" => "CPN-900", "F7" => "MPN-Z", "F16" => "Balance", "F18" => -4000.0)
 
-      connection.create_table(VerticalCommitStaging.table_name, id: false, force: true) { |t| t.string :DATE }
+      connection.create_table(VerticalCommitStaging.table_name, id: false, force: true) do |t|
+        t.string :DATE
+        t.string :CPN
+        t.string :END_CUSTOMER
+      end
       %w[Date Past 1/2/2027 10/3/2026 10/3/2026 Future].each do |date|
         connection.insert_fixture({ "DATE" => date }, VerticalCommitStaging.table_name)
+      end
+      { " CPN-900 " => "PHILO", "CPN-901" => "Unknown", "CPN-902" => " ", "CPN-903" => "XYLEM" }.each do |cpn, name|
+        connection.insert_fixture({ "DATE" => "10/3/2026", "CPN" => cpn, "END_CUSTOMER" => name }, VerticalCommitStaging.table_name)
       end
     end
 
@@ -54,6 +61,10 @@ module Reporting
       assert_equal Date.new(2026, 10, 3), VerticalCommitStaging.first_week
       assert_equal Date.new(2027, 1, 2), VerticalCommitStaging.parse("1/2/2027"), "January 2, not February 1"
       assert_nil VerticalCommitStaging.parse("Past")
+    end
+
+    test "gives each CPN its end customer, and nothing for the ones the sheet does not know" do
+      assert_equal({ "CPN-900" => "PHILO", "CPN-903" => "XYLEM" }, VerticalCommitStaging.end_customers)
     end
 
     private

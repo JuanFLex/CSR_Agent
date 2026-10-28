@@ -29,6 +29,7 @@
       %thead
         %tr
           %th Key (CPN|MPN)
+          %th{ title: "The customer the part is built for, from the Customer Commitment workbook" } End customer
           %th FPN
           %th Sold-to
           %th Plant
@@ -40,6 +41,7 @@
           - ctx = context[key.id] || {}
           %tr
             %td= key_code(key)
+            %td= key.end_customer || "—"
             - SearchHelper::KEY_DIMENSIONS.each do |dimension|
               - values = Array(ctx[dimension])
               %td{ class: ("multi" if values.many?) }

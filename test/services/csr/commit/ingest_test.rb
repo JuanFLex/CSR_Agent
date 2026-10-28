@@ -15,7 +15,7 @@ module Csr
         def count = 8
       end
 
-      FakeCalendar = Struct.new(:first_week) do
+      FakeCalendar = Struct.new(:first_week, :end_customers) do
         def table_name = "CS_tempVerticalCommit"
       end
 
@@ -25,7 +25,7 @@ module Csr
           "F6" => " FCS-MPN-Z ", "F7" => "MPN-Z", "F18" => 0.0, "F19" => -4000.0, "F69" => -12.0
         }
 
-        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK)).call
+        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK, {})).call
 
         assert_predicate result, :activated?
         lines = CommitLine.in_snapshot(result.snapshot).order(:bucket_date).to_a
@@ -34,6 +34,25 @@ module Csr
         assert_equal [ "FCS-MPN-Z", "702_ZZZCAR018", "FLX000558" ], lines.first.values_at(:fpn, :customer_id, :ship_address)
         assert_equal [ 0, -4000 ], lines.first(2).map(&:balance)
         assert_equal [ FIRST_WEEK + 51 * 7, -12 ], [ lines.last.bucket_date, lines.last.balance ]
+      end
+
+      test "gives the keys their end customer from the vertical sheet" do
+        row = { "F5" => "CPN-900", "F7" => "MPN-Z", "F18" => 0.0 }
+        calendar = FakeCalendar.new(FIRST_WEEK, { "CPN-900" => "PHILO" })
+
+        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: calendar).call
+
+        assert_predicate result, :activated?
+        assert_equal "PHILO", PartKey.find_by!(key_value: "CPN-900|MPN-Z").end_customer
+      end
+
+      test "a vertical sheet that cannot give the customers does not fail the load" do
+        calendar = FakeCalendar.new(FIRST_WEEK)
+        def calendar.end_customers = raise("connection reset")
+
+        result = Ingest.new(staging: FakeStaging.new(rows: [ { "F5" => "CPN-900", "F7" => "MPN-Z" } ]), calendar: calendar).call
+
+        assert_predicate result, :activated?
       end
     end
   end
