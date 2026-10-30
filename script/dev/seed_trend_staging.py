@@ -1,4 +1,4 @@
-"""Rebuild local stand-ins for the three tables the weekly ingests read, from
+"""Rebuild local stand-ins for the tables the weekly ingests read, from
 CS_Trend_Forecast.xlsx.
 
 Copies each sheet the way the ETL does: by position, the sheet's header rows
@@ -39,6 +39,10 @@ buffer = []
 for n, r in enumerate(wb["CS - Buffer Readiness Projectio"].iter_rows(min_row=3, values_only=True)):
     buffer.append([text(v) if n or i in BUFFER_TEXT else None for i, v in enumerate(r)])
 
+# The first week, as the ETL reads it off the Buffer sheet's header: the cell after "Past".
+header = next(wb["CS - Buffer Readiness Projectio"].iter_rows(min_row=3, max_row=3, values_only=True))
+report_week = datetime.datetime.strptime(header[header.index("Past") + 1], "%m-%d-%y").date().isoformat()
+
 vertical = []
 for r in wb["Vertical Commit (Hide)"].iter_rows(min_row=2, values_only=True):
     r = list(r)
@@ -72,7 +76,8 @@ def rebuild(table, columns, rows, kind=lambda i: "TEXT", stamped=True):
 
 rebuild("CS_tempTrendBufferReadinessProjection", BUFFER, buffer)
 rebuild("CS_tempVerticalCommit", VERTICAL, vertical, stamped=False)
+rebuild("CS_tempTrendReportWeek", ["REPORT_WEEK"], [[report_week]], kind=lambda i: "DATE" if i == 0 else "TEXT")
 rebuild("CSR_CustomerCommitment", COMMIT, commit, kind=lambda i: "REAL" if i < len(COMMIT) and i and i not in COMMIT_TEXT else "TEXT")
 con.commit()
 con.close()
-print("loaded_at:", loaded_at)
+print("loaded_at:", loaded_at, " report_week:", report_week)

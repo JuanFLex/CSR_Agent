@@ -106,7 +106,7 @@ module Csr
       end
 
       FakeCalendar = Struct.new(:first_week, keyword_init: true) do
-        def table_name = "CS_tempVerticalCommit"
+        def table_name = "CS_tempTrendReportWeek"
       end
     end
   end

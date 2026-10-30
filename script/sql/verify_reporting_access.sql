@@ -140,15 +140,16 @@ WHERE MPN IS NOT NULL
 -- ---------------------------------------------------------------------------
 -- 6. The weekly tables: Buffer, Commit and Demand.
 --
--- Settles: whether the login can read the four tables the weekly ingests use,
+-- Settles: whether the login can read the five tables the weekly ingests use,
 -- and whether the three wide ones carry the load stamp. can_select should be 1
--- on all four. last_load must not be NULL: it is the only thing that tells
+-- on all five. last_load must not be NULL: it is the only thing that tells
 -- the portal a new workbook was loaded. Demand reads only its Sales rows.
 -- ---------------------------------------------------------------------------
 SELECT
     HAS_PERMS_BY_NAME('dbo.CS_tempTrendBufferReadinessProjection', 'OBJECT', 'SELECT') AS can_select_buffer,
     HAS_PERMS_BY_NAME('dbo.CSR_CustomerCommitment', 'OBJECT', 'SELECT')                AS can_select_commit,
-    HAS_PERMS_BY_NAME('dbo.CS_tempVerticalCommit', 'OBJECT', 'SELECT')                 AS can_select_first_week,
+    HAS_PERMS_BY_NAME('dbo.CS_tempTrendReportWeek', 'OBJECT', 'SELECT')                AS can_select_first_week,
+    HAS_PERMS_BY_NAME('dbo.CS_tempVerticalCommit', 'OBJECT', 'SELECT')                 AS can_select_end_customer,
     HAS_PERMS_BY_NAME('dbo.CSR_DemandComparison', 'OBJECT', 'SELECT')                  AS can_select_demand;
 
 SELECT 'buffer' AS sheet, COUNT(*) AS total_rows, MAX(loaded_at) AS last_load
@@ -161,6 +162,7 @@ SELECT 'demand', COUNT(*), MAX(loaded_at)
 FROM CSR_DemandComparison
 WHERE SNAPSHOT_DATE = 'Sales';
 
--- The first week of both sheets. It has to be a Saturday.
-SELECT MIN(TRY_CONVERT(date, [DATE], 101)) AS first_week
-FROM CS_tempVerticalCommit;
+-- The first week of both sheets, as the ETL read it off the Buffer sheet's
+-- header. It has to be one row, and a Saturday.
+SELECT REPORT_WEEK AS first_week, DATENAME(weekday, REPORT_WEEK) AS day, loaded_at
+FROM CS_tempTrendReportWeek;

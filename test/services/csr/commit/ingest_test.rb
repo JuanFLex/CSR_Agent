@@ -15,9 +15,11 @@ module Csr
         def count = 8
       end
 
-      FakeCalendar = Struct.new(:first_week, :end_customers) do
-        def table_name = "CS_tempVerticalCommit"
+      FakeCalendar = Struct.new(:first_week) do
+        def table_name = "CS_tempTrendReportWeek"
       end
+
+      FakeCustomers = Struct.new(:end_customers)
 
       test "reads the sheet's unnamed columns and stores its 52 weeks" do
         row = {
@@ -25,7 +27,7 @@ module Csr
           "F6" => " FCS-MPN-Z ", "F7" => "MPN-Z", "F18" => 0.0, "F19" => -4000.0, "F69" => -12.0
         }
 
-        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK, {})).call
+        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK), customers: FakeCustomers.new({})).call
 
         assert_predicate result, :activated?
         lines = CommitLine.in_snapshot(result.snapshot).order(:bucket_date).to_a
@@ -38,19 +40,20 @@ module Csr
 
       test "gives the keys their end customer from the vertical sheet" do
         row = { "F5" => "CPN-900", "F7" => "MPN-Z", "F18" => 0.0 }
-        calendar = FakeCalendar.new(FIRST_WEEK, { "CPN-900" => "PHILO" })
+        customers = FakeCustomers.new({ "CPN-900" => "PHILO" })
 
-        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: calendar).call
+        result = Ingest.new(staging: FakeStaging.new(rows: [ row ]), calendar: FakeCalendar.new(FIRST_WEEK), customers: customers).call
 
         assert_predicate result, :activated?
         assert_equal "PHILO", PartKey.find_by!(key_value: "CPN-900|MPN-Z").end_customer
       end
 
       test "a vertical sheet that cannot give the customers does not fail the load" do
-        calendar = FakeCalendar.new(FIRST_WEEK)
-        def calendar.end_customers = raise("connection reset")
+        customers = FakeCustomers.new
+        def customers.end_customers = raise("connection reset")
 
-        result = Ingest.new(staging: FakeStaging.new(rows: [ { "F5" => "CPN-900", "F7" => "MPN-Z" } ]), calendar: calendar).call
+        result = Ingest.new(staging: FakeStaging.new(rows: [ { "F5" => "CPN-900", "F7" => "MPN-Z" } ]),
+                            calendar: FakeCalendar.new(FIRST_WEEK), customers: customers).call
 
         assert_predicate result, :activated?
       end

@@ -5,8 +5,8 @@ module Csr
   # Buffer and Commit both reach the ETL this way, as sheets of
   # CS_Trend_Forecast.xlsx copied column by column, and both lose the dates of
   # their header row on the way in. The weeks are consecutive Saturdays, so
-  # the first one is all that is needed, and the workbook's vertical sheet
-  # still has it (`calendar`).
+  # the first one is all that is needed, and the ETL reads it off the Buffer
+  # sheet's header (`calendar`).
   #
   # A subclass names its `column_map`, its `line_model` and the attribute a
   # week's value is stored under.
@@ -17,7 +17,7 @@ module Csr
 
     ROW_BATCH = 200
 
-    def initialize(staging:, calendar: Reporting::VerticalCommitStaging, **options)
+    def initialize(staging:, calendar: Reporting::ReportWeekStaging, **options)
       super(**options)
       @staging = staging
       @calendar = calendar

@@ -7,8 +7,9 @@ module Csr
     # same way an order line does, and a part with a forecast but no open
     # order still gets its key.
     class Ingest < WeeklyIngest
-      def initialize(staging: Reporting::CommitStaging, **options)
-        super
+      def initialize(staging: Reporting::CommitStaging, customers: Reporting::VerticalCommitStaging, **options)
+        super(staging:, **options)
+        @customers = customers
       end
 
       private
@@ -23,7 +24,7 @@ module Csr
       # the history, a failure here must not fail a snapshot already serving.
       def record_history(snapshot)
         super
-        PartKey.record_end_customers!(@calendar.end_customers, region: @region)
+        PartKey.record_end_customers!(@customers.end_customers, region: @region)
       rescue StandardError => e
         Rails.logger.error("[csr.commit] recording end customers failed: #{e.message}")
       end

@@ -1,17 +1,12 @@
 module Reporting
-  # CS_tempVerticalCommit, read for two things: the Saturday the workbook's
-  # weeks start on, and each CPN's end customer. The wide sheets lose the dates
-  # of their header row on the way in; this sheet keeps a date on every row,
-  # and all three start on the same week.
+  # CS_tempVerticalCommit, read for each CPN's end customer. Its dates do not
+  # give the workbook's first week: they start a week early in some workbooks,
+  # so that comes from ReportWeekStaging.
   class VerticalCommitStaging < Base
     self.table_name = "CS_tempVerticalCommit"
 
     # What the sheet writes when it does not know the customer.
     NO_CUSTOMER = %w[UNKNOWN].freeze
-
-    def self.first_week
-      distinct.pluck(:DATE).filter_map { |value| parse(value) }.min
-    end
 
     # => { normalized CPN => end customer }. One name per CPN on the real
     # table (checked 2026-10-28: 4,476 CPNs, none with two); it agrees with

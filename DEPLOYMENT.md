@@ -221,10 +221,11 @@ nothing to create for them:
 |---|---|
 | `CS_tempTrendBufferReadinessProjection` | Buffer: the `Balance vs SS (Buffer Stock)` rows |
 | `CSR_CustomerCommitment` | Commit: the `Balance` rows |
-| `CS_tempVerticalCommit` | the date of the first week, for Buffer and Commit |
+| `CS_tempTrendReportWeek` | the date of the first week, for Buffer and Commit: one row, `REPORT_WEEK` (`date`), that the ETL reads off the Buffer sheet's header (the cell after `Past`) |
+| `CS_tempVerticalCommit` | each CPN's end customer |
 | `CSR_DemandComparison` | Demand: the `Sales` rows of the weekly Demand Comparison report |
 
-All but `CS_tempVerticalCommit` need a `loaded_at` column stamped by the ETL
+All but `CS_tempTrendReportWeek` and `CS_tempVerticalCommit` need a `loaded_at` column stamped by the ETL
 on every load: it is how the portal knows there is something new. Without
 `force`, a load less than 30 minutes old is left for the next hourly poll, in
 case the package is still running. If an ingest fails it says why in the log,
@@ -329,6 +330,20 @@ well. Afterwards, about 4,400 keys should carry a customer:
 ```bash
 bundle exec rails runner 'p Csr::PartKey.where.not(end_customer: nil).count'
 ```
+
+**Once, on the deploy of the report week (`fix/report-week`).** Buffer and
+Commit used to take their first week from the vertical sheet's earliest date,
+which is a week early in some workbooks (4 of WK19..WK44, WK44 among them).
+They now read `CS_tempTrendReportWeek`, so the ETL has to fill it before this
+release goes out; until it does, both fail with "gave nil as the first week"
+and keep showing their previous load. Then force Buffer and Commit, and check
+the first week matches the Buffer sheet's header:
+
+```bash
+bundle exec rails runner 'p Reporting::ReportWeekStaging.first_week, Csr::BufferLine.in_snapshot(Csr::Snapshot.current("buffer")).minimum(:bucket_date)'
+```
+
+Rolling back needs the old code only: it does not read the new table.
 
 ## Notes / gotchas
 

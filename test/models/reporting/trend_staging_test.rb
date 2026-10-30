@@ -29,10 +29,16 @@ module Reporting
       { " CPN-900 " => "PHILO", "CPN-901" => "Unknown", "CPN-902" => " ", "CPN-903" => "XYLEM" }.each do |cpn, name|
         connection.insert_fixture({ "DATE" => "10/3/2026", "CPN" => cpn, "END_CUSTOMER" => name }, VerticalCommitStaging.table_name)
       end
+
+      connection.create_table(ReportWeekStaging.table_name, id: false, force: true) do |t|
+        t.date :REPORT_WEEK
+        t.datetime :loaded_at
+      end
+      connection.insert_fixture({ "REPORT_WEEK" => "2026-10-24", "loaded_at" => "2026-10-30 11:18:00" }, ReportWeekStaging.table_name)
     end
 
     teardown do
-      [ CommitStaging, VerticalCommitStaging ].each { |staging| Base.connection.drop_table(staging.table_name, if_exists: true) }
+      [ CommitStaging, VerticalCommitStaging, ReportWeekStaging ].each { |staging| Base.connection.drop_table(staging.table_name, if_exists: true) }
     end
 
     test "reads only the rows of its own type, with the mapped columns" do
@@ -57,8 +63,15 @@ module Reporting
       assert_not_predicate CommitStaging, :layout_ok?
     end
 
-    test "the first week is the earliest date, read the American way" do
-      assert_equal Date.new(2026, 10, 3), VerticalCommitStaging.first_week
+    test "the first week is the one the ETL read off the Buffer sheet's header, not the vertical sheet's earliest date" do
+      assert_equal Date.new(2026, 10, 24), ReportWeekStaging.first_week
+
+      # A second load landing on top of the first: no week rather than either.
+      ReportWeekStaging.connection.insert_fixture({ "REPORT_WEEK" => "2026-10-31" }, ReportWeekStaging.table_name)
+      assert_nil ReportWeekStaging.first_week
+    end
+
+    test "reads a vertical date the American way" do
       assert_equal Date.new(2027, 1, 2), VerticalCommitStaging.parse("1/2/2027"), "January 2, not February 1"
       assert_nil VerticalCommitStaging.parse("Past")
     end
