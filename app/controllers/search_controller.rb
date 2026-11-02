@@ -45,6 +45,15 @@ class SearchController < ApplicationController
     @escalation_columns = chosen_columns(Csr::Escalation, :escalation_columns)
     @line_columns = chosen_columns(Csr::OsorLine, :line_columns)
     @detail = Csr::WeeklyDetail.new(@search.part_keys, @search.sources) if %w[buffer commit demand].include?(@view)
+    if @view == "dashboard"
+      @buffer_key = @keys.select { |key| @buffer[key.id] && !@buffer[key.id].no_target? }
+                         .min_by { |key| @buffer.fetch(key.id).min_vs_ss }
+      if @buffer_key
+        # Only the selected key: combining unrelated parts would hide a shortage.
+        @buffer_projection = Csr::WeeklyDetail.new(@search.part_keys.where(id: @buffer_key.id), @search.sources)
+                                             .buffer_weeks[@buffer_key.id]
+      end
+    end
     # Paging and moving between the menu's pages look again at the same
     # search; only one typed in the box is a new one.
     log_search("search") unless params[:page].present? || params[:view].present?

@@ -1,0 +1,9 @@
+-# locals: (key:, weeks:)
+- if weeks.present?
+  = week_chart(weeks.map(&:first),
+               [ { name: "Projected balance", values: weeks.map(&:second), kind: :line, tone: "primary" },
+                 { name: "Safety stock", values: weeks.map(&:third), kind: :reference, tone: "reference" } ],
+               label: "Projected balance against safety stock, week by week, for #{key.key_value}")
+  %p.caption Pieces, from this week's report. Below the dashed line the part is into its buffer.
+- else
+  %p.hint No safety stock agreed: nothing to measure the balance against.

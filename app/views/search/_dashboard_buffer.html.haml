@@ -1,0 +1,19 @@
+-# locals: (key:, weeks:, buffer:, sources:, search:, multiple_keys:)
+%section.panel.dashboard-buffer
+  %header.panel-head
+    %h2 Projected balance vs safety stock
+    = link_to "Buffer details", search_path(view: "buffer", search_type: search.search_type, value: search.value, region: search.region), class: "button"
+  - if key
+    .selected-key
+      %h3= key_heading(key)
+      = buffer_pill(buffer.fetch(key.id))
+    - if multiple_keys
+      %p.table-note Lowest-buffer key shown; other keys are not combined.
+    .chart-box
+      = render "buffer_projection", key: key, weeks: weeks
+  - elsif sources["buffer"].nil?
+    %p.hint Buffer Readiness has not been loaded yet.
+  - elsif buffer.empty?
+    %p.hint The Buffer Readiness report carries none of these parts.
+  - else
+    %p.hint No projection with a safety stock target is available for these parts.

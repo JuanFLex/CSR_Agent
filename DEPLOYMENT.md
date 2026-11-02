@@ -294,6 +294,13 @@ sudo systemctl restart csr_agent
 If a deploy changes how a source's rows are read, reload every source with the
 five `force: true` runners of "8. First load" instead of waiting for the polls.
 
+**Dashboard Buffer projection.** The dashboard now pairs Open Orders with the
+same projected-balance chart as Buffer Readiness, below the summary cards. A
+multi-key search shows the key with the lowest Buffer ratio, explicitly named;
+different keys are never added together. The detail page keeps its history chart.
+This is presentation only: no migration or forced reload is needed. Verify the
+dashboard and detail page show the same projection for the selected key.
+
 **Once, on the deploy that sets the time zone (`chore/uat-prep`).** The app
 used to run in UTC; it now runs in `America/Mexico_City`, and reads the
 reporting server's clock as Mexico time. The rows already loaded were read the

@@ -87,6 +87,113 @@ class SourcePagesTest < ActionDispatch::IntegrationTest
     assert_select ".cards.supply .card", text: /Demand inside LT\s*—\s*not in the Demand Comparison report/
   end
 
+  test "the dashboard pairs orders with the worst key's existing Buffer chart without combining keys" do
+    snapshot = active("buffer")
+    csr_part_keys(:alternate).update!(end_customer: "PHILO")
+    [ 2, 0.5 ].each_with_index do |ratio, week|
+      buffer_week(snapshot, csr_part_keys(:primary), safety_stock: 4000, vs_ss: ratio, week: week)
+    end
+    [ -1, 0 ].each_with_index do |ratio, week|
+      buffer_week(snapshot, csr_part_keys(:alternate), safety_stock: 8000, vs_ss: ratio, week: week)
+    end
+    buffer_week(snapshot, csr_part_keys(:other), safety_stock: 10_000, vs_ss: -99, week: 0)
+    buffer_week(snapshot, csr_part_keys(:europe), safety_stock: 10_000, vs_ss: -99, week: 0)
+    old = Csr::Snapshot.create!(region: "Americas", source_type: "buffer", status: :superseded)
+    buffer_week(old, csr_part_keys(:primary), safety_stock: 4000, vs_ss: -99, week: 0)
+
+    get root_url, params: SEARCH
+
+    assert_response :success
+    assert_select ".cards.supply + .dashboard-overview table.lines tbody tr", count: 4
+    assert_select ".dashboard-overview + .split table.keys tbody tr", count: 2
+    assert_select ".dashboard-buffer .selected-key", text: /CPN-100\|.*MPN-B.*PHILO.*Below target · -1×/m
+    assert_select ".dashboard-buffer .table-note", text: /Lowest-buffer key.*other keys are not combined/
+    assert_select ".dashboard-buffer a[href=?]", search_path(view: "buffer", **SEARCH, region: "Americas"), text: "Buffer details"
+    assert_select ".dashboard-buffer svg", count: 1
+    assert_select ".dashboard-buffer svg[aria-label$=?] title", "CPN-100|MPN-B", text: /Oct 3, 2026\s+Projected balance: -8,000\s+Safety stock: 8,000/
+    chart = css_select(".dashboard-buffer svg").first.to_html
+    assert_select "h3", text: "Allocated on hand, week over week", count: 0
+
+    get search_url(view: "buffer"), params: SEARCH
+
+    assert_equal chart, css_select("svg[aria-label$='CPN-100|MPN-B']").first.to_html
+    assert_select "h3", text: "Allocated on hand, week over week", count: 2
+  end
+
+  test "the dashboard also shows a single covered key and keeps the detail link's search" do
+    snapshot = active("buffer")
+    buffer_week(snapshot, csr_part_keys(:primary), safety_stock: 4000, vs_ss: 2, week: 0)
+    buffer_week(snapshot, csr_part_keys(:primary), safety_stock: 4000, vs_ss: 1, week: 1)
+    search = { search_type: "mpn", value: "MPN-A", region: "Americas" }
+
+    get search_url(view: "dashboard"), params: search
+
+    assert_response :success
+    assert_select ".dashboard-buffer .selected-key", text: /CPN-100\|.*MPN-A.*Covered · 1×/m
+    assert_select ".dashboard-buffer svg", count: 1
+    assert_select ".dashboard-buffer .table-note", count: 0
+    assert_select ".dashboard-buffer a[href=?]", search_path(view: "buffer", **search), text: "Buffer details"
+  end
+
+  test "the dashboard distinguishes a source not loaded from parts absent from Buffer" do
+    get root_url, params: SEARCH
+
+    assert_select ".dashboard-buffer .hint", text: "Buffer Readiness has not been loaded yet."
+    assert_select ".dashboard-buffer svg", count: 0
+    assert_select ".dashboard-overview table.lines tbody tr", count: 4
+
+    buffer_week(active("buffer"), csr_part_keys(:other), safety_stock: 4000, vs_ss: 1, week: 0)
+    get root_url, params: SEARCH
+
+    assert_select ".dashboard-buffer .hint", text: "The Buffer Readiness report carries none of these parts."
+    assert_select ".dashboard-buffer svg", count: 0
+  end
+
+  test "the dashboard does not draw a fabricated projection when no key has a target" do
+    buffer_week(active("buffer"), csr_part_keys(:primary), safety_stock: 0, vs_ss: 0, week: 0)
+
+    get root_url, params: SEARCH
+
+    assert_select ".dashboard-buffer .hint", text: "No projection with a safety stock target is available for these parts."
+    assert_select ".dashboard-buffer svg", count: 0
+    assert_select ".dashboard-buffer .selected-key", count: 0
+  end
+
+  test "keys without a target cannot displace a covered key on the dashboard" do
+    snapshot = active("buffer")
+    buffer_week(snapshot, csr_part_keys(:primary), safety_stock: 0, vs_ss: -99, week: 0)
+    buffer_week(snapshot, csr_part_keys(:alternate), safety_stock: 4000, vs_ss: 2, week: 0)
+
+    get root_url, params: SEARCH
+
+    assert_select ".dashboard-buffer .selected-key", text: /CPN-100\|.*MPN-B.*Covered · 2×/m
+    assert_select ".dashboard-buffer svg", count: 1
+  end
+
+  test "tied Buffer keys are selected in key order rather than query order" do
+    snapshot = active("buffer")
+    %i[alternate primary].each do |key|
+      buffer_week(snapshot, csr_part_keys(key), safety_stock: 4000, vs_ss: 0.5, week: 0)
+    end
+
+    get root_url, params: SEARCH
+
+    assert_select ".dashboard-buffer .selected-key", text: /CPN-100\|.*MPN-A.*Below target · 0.5×/m
+  end
+
+  test "the dashboard projection does not appear on blank or unmatched searches or on Open Orders" do
+    buffer_week(active("buffer"), csr_part_keys(:primary), safety_stock: 4000, vs_ss: 0.5, week: 0)
+    get root_url
+    assert_select ".dashboard-overview", count: 0
+
+    get root_url, params: { search_type: "cpn", value: "NOT-FOUND" }
+    assert_select ".dashboard-overview", count: 0
+
+    get search_url(view: "orders"), params: SEARCH
+    assert_select ".dashboard-overview", count: 0
+    assert_select "table.lines tbody tr", count: 4
+  end
+
   test "the keys table and the source pages name the end customer, and show a dash where it is unknown" do
     csr_part_keys(:primary).update!(end_customer: "PHILO")
     Csr::CommitLine.create!(snapshot: active("commit"), part_key: csr_part_keys(:primary), bucket_date: Date.new(2026, 10, 10), balance: 0)

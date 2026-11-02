@@ -53,9 +53,11 @@
           = render "demand", keys: @keys, detail: @detail, demand: @demand
         - else
           = render "summary", summary: @summary, buffer: @buffer, commit: @commit, demand: @demand
+          .split.dashboard-overview
+            = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages
+            = render "dashboard_buffer", key: @buffer_key, weeks: @buffer_projection, buffer: @buffer, sources: @search.sources, search: @search, multiple_keys: @keys.many?
           .split
             = render "keys", keys: @keys, context: @context, buffer: @buffer, commit: @commit, demand: @demand
             = render "narrative", search: @search, summary: @summary, context: @context
           - if @escalations.any?
             = render "escalations", escalations: @escalations, columns: @escalation_columns, search: @search
-          = render "lines", lines: @lines, summary: @summary, search: @search, columns: @line_columns, page: @page, pages: @pages
